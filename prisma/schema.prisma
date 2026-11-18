@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model tb_address {
+  address_id     Int         @id @default(autoincrement())
+  address_detail String      @db.Text
+  receiver_phone String      @db.VarChar(20)
+  cus_id         Int
+  tb_customer    tb_customer @relation(fields: [cus_id], references: [cus_id], onUpdate: Restrict, map: "tb_address_ibfk_1")
+  tb_order       tb_order[]
+
+  @@index([cus_id], map: "cus_id")
+}
+
+model tb_book {
+  book_id          Int                @id @default(autoincrement())
+  isbn             String             @db.VarChar(20)
+  book_name        String             @db.VarChar(200)
+  description      String?            @db.Text
+  author           String?            @db.VarChar(150)
+  selling_price    Decimal            @db.Decimal(10, 2)
+  image            String?            @db.VarChar(255)
+  grade_level      String?            @db.VarChar(50)
+  stock_quantity   Int
+  status           String             @db.VarChar(50)
+  publisher_id     Int
+  category_id      Int
+  type_id          Int
+  tb_publisher     tb_publisher       @relation(fields: [publisher_id], references: [publisher_id], onUpdate: Restrict, map: "tb_book_ibfk_1")
+  tb_category      tb_category        @relation(fields: [category_id], references: [category_id], onUpdate: Restrict, map: "tb_book_ibfk_2")
+  tb_type          tb_type            @relation(fields: [type_id], references: [type_id], onUpdate: Restrict, map: "tb_book_ibfk_3")
+  tb_have_discount tb_have_discount[]
+  tb_order_detail  tb_order_detail[]
+
+  @@index([category_id], map: "category_id")
+  @@index([publisher_id], map: "publisher_id")
+  @@index([type_id], map: "type_id")
+}
+
+model tb_category {
+  category_id   Int       @id @default(autoincrement())
+  category_name String    @db.VarChar(100)
+  tb_book       tb_book[]
+}
+
+model tb_customer {
+  cus_id        Int          @id @default(autoincrement())
+  cus_name      String       @db.VarChar(150)
+  member_type   String       @db.VarChar(50)
+  email         String       @db.VarChar(100)
+  passw         String       @db.VarChar(255)
+  phone         String       @db.VarChar(20)
+  register_date DateTime     @db.Date
+  member_status String       @db.VarChar(50)
+  tb_address    tb_address[]
+  tb_order      tb_order[]
+}
+
+model tb_delivery {
+  delivery_id      Int       @id @default(autoincrement())
+  delivery_date    DateTime? @db.DateTime(0)
+  shipping_company String    @db.VarChar(100)
+  tracking_number  String?   @db.VarChar(50)
+  parcel_status    String    @db.VarChar(50)
+  order_id         Int
+  tb_order         tb_order  @relation(fields: [order_id], references: [order_id], onUpdate: Restrict, map: "tb_delivery_ibfk_1")
+
+  @@index([order_id], map: "order_id")
+}
+
+model tb_discount {
+  discount_id      Int                @id @default(autoincrement())
+  discount_code    String             @db.VarChar(50)
+  discount_des     String?            @db.VarChar(300)
+  discount_type    String             @db.VarChar(50)
+  discount_value   Decimal            @db.Decimal(10, 2)
+  start_date       DateTime           @db.DateTime(0)
+  end_date         DateTime           @db.DateTime(0)
+  discount_active  Boolean
+  tb_have_discount tb_have_discount[]
+}
+
+model tb_have_discount {
+  book_id     Int
+  discount_id Int
+  tb_book     tb_book     @relation(fields: [book_id], references: [book_id], onUpdate: Restrict, map: "tb_have_discount_ibfk_1")
+  tb_discount tb_discount @relation(fields: [discount_id], references: [discount_id], onUpdate: Restrict, map: "tb_have_discount_ibfk_2")
+
+  @@id([book_id, discount_id])
+  @@index([discount_id], map: "discount_id")
+}
+
+model tb_order {
+  order_id        Int               @id @default(autoincrement())
+  total_price     Decimal           @db.Decimal(10, 2)
+  order_status    String            @db.VarChar(50)
+  cus_id          Int
+  order_date      DateTime          @db.Date
+  address_id      Int
+  tb_delivery     tb_delivery[]
+  tb_customer     tb_customer       @relation(fields: [cus_id], references: [cus_id], onUpdate: Restrict, map: "tb_order_ibfk_1")
+  tb_address      tb_address        @relation(fields: [address_id], references: [address_id], onUpdate: Restrict, map: "tb_order_ibfk_2")
+  tb_order_detail tb_order_detail[]
+  tb_payment      tb_payment[]
+
+  @@index([address_id], map: "address_id")
+  @@index([cus_id], map: "cus_id")
+}
+
+model tb_order_detail {
+  order_id         Int
+  book_id          Int
+  quantity         Int
+  total_item_price Decimal  @db.Decimal(10, 2)
+  tb_order         tb_order @relation(fields: [order_id], references: [order_id], onUpdate: Restrict, map: "tb_order_detail_ibfk_1")
+  tb_book          tb_book  @relation(fields: [book_id], references: [book_id], onUpdate: Restrict, map: "tb_order_detail_ibfk_2")
+
+  @@id([order_id, book_id])
+  @@index([book_id], map: "book_id")
+}
+
+model tb_payment {
+  payment_id     Int       @id @default(autoincrement())
+  amount         Decimal   @db.Decimal(10, 2)
+  payment_method String    @db.VarChar(50)
+  payment_status String    @db.VarChar(50)
+  transfer_ref   String?   @db.VarChar(100)
+  slip_image     String?   @db.VarChar(255)
+  paid_date      DateTime? @db.DateTime(0)
+  verified_by    String?   @db.VarChar(150)
+  verified_date  DateTime? @db.DateTime(0)
+  order_id       Int
+  tb_order       tb_order  @relation(fields: [order_id], references: [order_id], onUpdate: Restrict, map: "tb_payment_ibfk_1")
+
+  @@index([order_id], map: "order_id")
+}
+
+model tb_publisher {
+  publisher_id   Int       @id @default(autoincrement())
+  publisher_name String    @db.VarChar(150)
+  tb_book        tb_book[]
+}
+
+model tb_type {
+  type_id   Int       @id @default(autoincrement())
+  type_name String    @db.VarChar(100)
+  tb_book   tb_book[]
+}
