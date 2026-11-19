@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // สคริปต์ seed ของ Prisma เป็น CommonJS (require) ไม่ใช่โค้ดเว็บ
+    "prisma/seed.js",
   ]),
 ]);
 
