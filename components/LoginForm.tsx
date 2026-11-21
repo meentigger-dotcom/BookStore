@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginForm() {
   const router = useRouter();
+  const search = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +30,11 @@ export default function LoginForm() {
         setError(data.error ?? "เข้าสู่ระบบไม่สำเร็จ");
         return;
       }
-      router.push("/");
+      router.push(
+        data.member_type === "แอดมิน"
+          ? "/admin"
+          : search.get("next") || "/"
+      );
       router.refresh();
     } catch {
       setError("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");

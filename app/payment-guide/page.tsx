@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PaymentReportForm from "@/components/PaymentReportForm";
 
 export const metadata = { title: "วิธีชำระเงิน | CS&Book" };
 
@@ -94,62 +95,9 @@ export default function PaymentGuidePage() {
           🧾 แจ้งชำระเงิน
         </h2>
         <p className="mt-1 text-xs text-neutral-400">
-          แบบฟอร์มตัวอย่าง — จะเชื่อมกับตาราง tb_payment ในขั้นถัดไป
+          เชื่อมกับตาราง tb_payment จริง — ส่งแล้วแอดมินจะเห็นสลิปในหน้าตรวจทันที
         </p>
-        <form className="mt-4 grid grid-cols-1 gap-4 rounded-xl border border-neutral-200 bg-white p-5 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              เลขที่คำสั่งซื้อ
-            </span>
-            <input
-              type="number"
-              required
-              placeholder="เช่น 15"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              จำนวนเงิน (บาท)
-            </span>
-            <input
-              type="number"
-              step="0.01"
-              required
-              placeholder="เช่น 670.00"
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              วัน-เวลาที่โอน
-            </span>
-            <input
-              type="datetime-local"
-              required
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              แนบสลิปการโอน
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 w-full text-sm text-neutral-500 file:mr-3 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700"
-            />
-          </label>
-          <div className="sm:col-span-2">
-            <button
-              type="button"
-              className="btn-chunky px-6 py-3 text-base"
-              title="ระบบบันทึกการชำระเงินจะเชื่อมต่อฐานข้อมูลในขั้นถัดไป"
-            >
-              ส่งข้อมูลการชำระเงิน
-            </button>
-          </div>
-        </form>
+        <PaymentReportForm />
       </section>
     </div>
   );

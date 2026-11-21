@@ -36,7 +36,11 @@ export async function POST(request: Request) {
 
     // ตั้ง session แล้วตอบกลับ
     await setSession(cus.cus_id);
-    return NextResponse.json({ ok: true, cus_name: cus.cus_name });
+    return NextResponse.json({
+      ok: true,
+      cus_name: cus.cus_name,
+      member_type: cus.member_type,
+    });
   } catch (e) {
     console.error("login error:", e);
     return NextResponse.json(

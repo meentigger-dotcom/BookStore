@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Kanit, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -35,7 +36,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${kanit.variable} ${notoSansThai.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-800">
-        <Header />
+        {/* Header อ่าน session (cookie) — ครอบ Suspense เพื่อให้ navigations ไม่ถูกบล็อก */}
+        <Suspense
+          fallback={
+            <div className="h-[132px] w-full bg-[linear-gradient(180deg,#dab9af_0%,#c9a094_100%)]" />
+          }
+        >
+          <Header />
+        </Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
       </body>

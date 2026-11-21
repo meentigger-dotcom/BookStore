@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrackForm from "@/components/TrackForm";
 
 export const metadata = { title: "ตรวจสอบสินค้า | CS&Book" };
 
@@ -23,21 +24,7 @@ export default function TrackPage() {
       </p>
 
       {/* ช่องกรอกเลขคำสั่งซื้อ */}
-      <form className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <input
-          type="number"
-          required
-          placeholder="กรอกเลขที่คำสั่งซื้อ เช่น 15"
-          className="flex-1 rounded-xl border-2 border-neutral-300 px-4 py-3 text-sm outline-none focus:border-blue-500"
-        />
-        <button
-          type="button"
-          className="btn-chunky px-6 py-3 text-base"
-          title="ระบบติดตามพัสดุจะเชื่อมต่อฐานข้อมูลในขั้นถัดไป"
-        >
-          🔎 ตรวจสอบ
-        </button>
-      </form>
+      <TrackForm />
 
       {/* ตัวอย่างสถานะที่ระบบรองรับ */}
       <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-5">
@@ -71,8 +58,8 @@ export default function TrackPage() {
       </div>
 
       <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
-        * หน้านี้จะดึงข้อมูลจริงจากตาราง tb_order + tb_delivery เมื่อระบบสั่งซื้อ
-        (ขั้นถัดไป) เสร็จสมบูรณ์
+        * หน้านี้ดึงข้อมูลจริงจากตาราง tb_order + tb_delivery — ต้องเข้าสู่ระบบ
+        และเป็นเจ้าของคำสั่งซื้อ (หรือแอดมิน) จึงจะค้นหาได้
       </p>
     </div>
   );

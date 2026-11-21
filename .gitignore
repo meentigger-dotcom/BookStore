@@ -42,3 +42,8 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# ไฟล์ที่ผู้ใช้อัปโหลด (สลิปโอนเงิน) — เก็บโฟลเดอร์ว่างไว้
+/public/uploads/**
+!/public/uploads/.gitkeep
+!/public/uploads/slips/.gitkeep

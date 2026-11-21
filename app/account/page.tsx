@@ -84,7 +84,7 @@ export default async function AccountPage() {
                 ))}
                 <div className="pt-2 text-sm">
                   <Link
-                    href="/track"
+                    href="/orders"
                     className="text-blue-600 hover:underline"
                   >
                     ดูประวัติการสั่งซื้อของคุณ &gt;

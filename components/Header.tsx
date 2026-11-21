@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Nav from "./Nav";
+import CartBadge from "./CartBadge";
 import prisma from "@/lib/prisma";
 import { getCusId } from "@/lib/auth";
 
@@ -63,13 +64,7 @@ export default async function Header() {
 
         {/* ตะกร้า + บัญชีผู้ใช้ */}
         <div className="flex h-11 shrink-0 items-center gap-2 rounded-md bg-[#1b5eab] px-3 text-white shadow-sm">
-          <Link
-            href="/cart"
-            aria-label="ตะกร้าสินค้า"
-            className="grid h-8 w-8 place-items-center rounded-md text-lg transition hover:bg-white/15"
-          >
-            🛒
-          </Link>
+          <CartBadge />
           <Link
             href={userName ? "/account" : "/login"}
             className="hidden text-sm font-semibold transition hover:underline sm:block"

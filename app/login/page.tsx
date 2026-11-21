@@ -21,6 +21,9 @@ export default function LoginPage() {
       <p className="mt-4 text-center text-xs text-neutral-400">
         บัญชีทดสอบ: kinami@example.com / 123456
       </p>
+      <p className="mt-1 text-center text-xs text-neutral-400">
+        แอดมิน: admin@csbook.com / admin123
+      </p>
       <p className="mt-2 text-center text-xs">
         <Link href="/" className="text-neutral-400 hover:text-orange-500">
           ← กลับหน้าแรก

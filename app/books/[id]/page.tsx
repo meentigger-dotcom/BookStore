@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import prisma from "@/lib/prisma";
 import { priceOf, fmt } from "@/lib/book";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export default async function BookDetailPage({
   params,
@@ -112,14 +113,7 @@ export default async function BookDetailPage({
           </dl>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              disabled={!inStock}
-              className="btn-chunky px-6 py-3 text-base disabled:cursor-not-allowed disabled:opacity-50"
-              title="ระบบตะกร้าสินค้าจะเชื่อมต่อในขั้นถัดไป"
-            >
-              🛒 เพิ่มลงตะกร้า
-            </button>
+            <AddToCartButton bookId={book.book_id} stock={book.stock_quantity} />
             <Link
               href="/cart"
               className="inline-flex items-center rounded-2xl border-2 border-slate-800 px-6 py-3 font-display font-bold text-slate-800 transition hover:bg-slate-800 hover:text-white"
@@ -128,7 +122,7 @@ export default async function BookDetailPage({
             </Link>
           </div>
           <p className="mt-3 text-xs text-neutral-400">
-            * ระบบชำระเงินและตะกร้าจะเชื่อมต่อฐานข้อมูลในขั้นถัดไป
+            * ราคาและสต็อกดึงจากฐานข้อมูลสด — ระบบจะตัดสต็อกจริงตอนยืนยันคำสั่งซื้อ
           </p>
         </div>
       </div>

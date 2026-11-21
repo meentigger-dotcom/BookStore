@@ -6,9 +6,36 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
+  const bcrypt = require("bcryptjs");
+
+  // ===== บัญชีแอดมิน (รันก่อนเสมอ — แม้ seed ซ้ำ) =====
+  const adminEmail = "admin@csbook.com";
+  const existingAdmin = await prisma.tb_customer.findFirst({
+    where: { email: adminEmail },
+  });
+  if (existingAdmin) {
+    await prisma.tb_customer.update({
+      where: { cus_id: existingAdmin.cus_id },
+      data: { member_type: "แอดมิน", member_status: "ใช้งาน" },
+    });
+  } else {
+    await prisma.tb_customer.create({
+      data: {
+        cus_name: "Admin CS&Book",
+        member_type: "แอดมิน",
+        email: adminEmail,
+        passw: await bcrypt.hash("admin123", 10),
+        phone: "021234567",
+        register_date: new Date(),
+        member_status: "ใช้งาน",
+      },
+    });
+  }
+  console.log("บัญชีแอดมินพร้อม: admin@csbook.com / admin123");
+
   const bookCount = await prisma.tb_book.count();
   if (bookCount > 0) {
-    console.log("พบข้อมูลหนังสือในฐานข้อมูลแล้ว — ข้ามการ seed");
+    console.log("พบข้อมูลหนังสือในฐานข้อมูลแล้ว — ข้ามการ seed หนังสือ");
     return;
   }
 
@@ -133,30 +160,50 @@ async function main() {
     });
   }
 
-  // ===== สมาชิกทดสอบ =====
-  const bcrypt = require("bcryptjs");
-  const demo = await prisma.tb_customer.create({
-    data: {
-      cus_name: "kinami",
-      member_type: "สมาชิก",
-      email: "kinami@example.com",
-      passw: await bcrypt.hash("123456", 10),
-      phone: "0812345678",
-      register_date: new Date(),
-      member_status: "ใช้งาน",
-    },
+  // ===== สมาชิกทดสอบ (รันซ้ำได้) =====
+  const demoEmail = "kinami@example.com";
+  const existingDemo = await prisma.tb_customer.findFirst({
+    where: { email: demoEmail },
   });
-  await prisma.tb_address.create({
-    data: {
-      address_detail: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
-      receiver_phone: "0812345678",
-      cus_id: demo.cus_id,
-    },
+  let demo;
+  if (existingDemo) {
+    await prisma.tb_customer.update({
+      where: { cus_id: existingDemo.cus_id },
+      data: { member_type: "สมาชิก", member_status: "ใช้งาน" },
+    });
+    demo = existingDemo;
+  } else {
+    demo = await prisma.tb_customer.create({
+      data: {
+        cus_name: "kinami",
+        member_type: "สมาชิก",
+        email: demoEmail,
+        passw: await bcrypt.hash("123456", 10),
+        phone: "0812345678",
+        register_date: new Date(),
+        member_status: "ใช้งาน",
+      },
+    });
+  }
+  const demoAddress = await prisma.tb_address.findFirst({
+    where: { cus_id: demo.cus_id },
   });
+  if (!demoAddress) {
+    await prisma.tb_address.create({
+      data: {
+        address_detail: "123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110",
+        receiver_phone: "0812345678",
+        cus_id: demo.cus_id,
+      },
+    });
+  }
+
+  // ===== บัญชีแอดมินสร้างไว้ตอนต้นฟังก์ชันแล้ว (upsert) =====
 
   const finalCount = await prisma.tb_book.count();
-  console.log(`เสร็จสิ้น: หนังสือ ${finalCount} เล่ม + ส่วนลด + สมาชิกทดสอบ`);
-  console.log("ล็อกอินทดสอบ: kinami@example.com / 123456");
+  console.log(`เสร็จสิ้น: หนังสือ ${finalCount} เล่ม + ส่วนลด + บัญชีทดสอบ`);
+  console.log("สมาชิก:  kinami@example.com / 123456");
+  console.log("แอดมิน:   admin@csbook.com / admin123");
 }
 
 main()
