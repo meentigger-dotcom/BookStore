@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <title>CS&Book Flowchart</title>
+    <style>
+      body { font-family: "Segoe UI", "Noto Sans Thai", sans-serif; margin: 24px; background: #fff; }
+      h1 { font-size: 22px; }
+      .mermaid { margin-top: 16px; }
+      #err { color: #b00020; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Flowchart การใช้งานเว็บ CS&amp;Book</h1>
+    <pre id="err"></pre>
+    <div class="mermaid" id="d1">
+flowchart TD
+    subgraph Customer["👤 ลูกค้า"]
+        A([เข้าเว็บ CS&Book]) --> B[เลือกหนังสือ<br/>ค้นหา / หมวดหมู่ / Flash Sale]
+        B --> C[หน้ารายละเอียดหนังสือ]
+        C --> D[🛒 เพิ่มลงตะกร้า]
+        D --> E[หน้าตะกร้า<br/>ตรวจราคา + จำนวน]
+        E --> F{สั่งซื้อต่อ?}
+        F -- ยังเลือกเพิ่ม --> B
+        F -- ไปชำระเงิน --> G{เข้าสู่ระบบแล้ว?}
+        G -- ยังไม่ได้ --> H[สมัครสมาชิก / เข้าสู่ระบบ]
+        H --> G
+        G -- แล้ว --> I[หน้า Checkout]
+        I --> J{เลือกที่อยู่จัดส่ง}
+        J -- ใช้ที่อยู่เดิม --> K[เลือกที่อยู่ที่บันทึกไว้]
+        J -- ที่อยู่ใหม่ --> L[กรอกที่อยู่ + เบอร์โทร]
+        K --> M[กดยืนยันคำสั่งซื้อ]
+        L --> M
+        M --> N[หน้า คำสั่งซื้อ: รอชำระเงิน]
+        N --> O[โอนเงินตามยอด<br/>แล้วแนบสลิป]
+        O --> P[สถานะ: รอตรวจสอบ]
+        P --> Q{ผลตรวจสลิป}
+        Q -- ไม่อนุมัติ --> R[แจ้งเหตุ + ส่งสลิปใหม่]
+        R --> O
+        Q -- อนุมัติ --> S[สถานะ: ชำระเงินแล้ว]
+        S --> T[สถานะ: กำลังจัดส่ง<br/>+ เลขพัสดุ]
+        T --> U[เช็คพัสดุที่ /track]
+        U --> V[สถานะ: จัดส่งสำเร็จ]
+        V --> W([✅ ได้รับสินค้า])
+    end
+
+    subgraph System["⚙️ ระบบ (อัตโนมัติ)"]
+        N1[สร้าง tb_order + tb_order_detail<br/>คำนวณราคาจาก DB]
+        N2[ตัดสต็อกใน Transaction<br/>กันของหมดพร้อมกัน]
+        N3[INSERT ที่อยู่ใหม่<br/>ไม่แก้ที่อยู่เดิม]
+        N4[สร้าง tb_payment<br/>เก็บรูปสลิป]
+        N5[คืนสต็อกอัตโนมัติ<br/>เมื่อยกเลิก]
+        M -.-> N1
+        N1 --> N2
+        N1 --> N3
+        O -.-> N4
+        X[ลูกค้า/แอดมินกดยกเลิก] -.-> N5
+    end
+
+    subgraph Admin["🛠️ แอดมิน"]
+        AD1([เข้าสู่ระบบ admin@csbook.com]) --> AD2[Dashboard<br/>รายได้ / ออเดอร์ / สลิปรอตรวจ]
+        AD2 --> AD3[หน้า ตรวจสลิป]
+        AD3 --> Q
+        Q -- อนุมัติ --> AD4[หน้า จัดการคำสั่งซื้อ]
+        AD4 --> AD5[ใส่เลขพัสดุ + เปลี่ยนสถานะ<br/>กำลังจัดส่ง / จัดส่งสำเร็จ]
+        AD5 --> T
+        AD2 --> AD6[หน้าจัดการหนังสือ<br/>เพิ่ม / แก้ไข / ลบ]
+        AD6 --> B
+        AD2 --> AD7[คำสั่งซื้อทั้งหมด]
+        AD7 --> X
+    end
+
+    style W fill:#c8f7c5,stroke:#2e7d32
+    style N fill:#fff3cd,stroke:#b8860b
+    style V fill:#c8f7c5,stroke:#2e7d32
+    </div>
+
+    <h2 style="margin-top:32px">สถานะคำสั่งซื้อ</h2>
+    <div class="mermaid" id="d2">
+stateDiagram-v2
+    state "รอชำระเงิน" as S1
+    state "รอตรวจสอบ" as S2
+    state "ชำระเงินแล้ว" as S3
+    state "กำลังจัดส่ง" as S4
+    state "จัดส่งสำเร็จ" as S5
+    state "ยกเลิก" as S6
+
+    [*] --> S1 : สั่งซื้อสำเร็จ (หักสต็อก)
+    S1 --> S2 : แนบสลิป
+    S2 --> S3 : แอดมินอนุมัติ
+    S2 --> S1 : แอดมินปฏิเสธสลิป
+    S3 --> S4 : ใส่เลขพัสดุ
+    S4 --> S5 : ส่งถึงลูกค้า
+    S1 --> S6 : ยกเลิก (คืนสต็อก)
+    S2 --> S6 : ยกเลิก (คืนสต็อก)
+    S3 --> S6 : ยกเลิก (คืนสต็อก)
+    S5 --> [*]
+    S6 --> [*]
+    </div>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: false, theme: "base", fontFamily: "Noto Sans Thai, Segoe UI, sans-serif" });
+      try {
+        await mermaid.run({ querySelector: ".mermaid" });
+        document.title = "OK: flowchart rendered";
+      } catch (e) {
+        document.getElementById("err").textContent = "MERMAID ERROR: " + (e?.message || e);
+        document.title = "ERR: flowchart";
+      }
+    </script>
+  </body>
+</html>

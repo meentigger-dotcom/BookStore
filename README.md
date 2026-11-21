@@ -62,6 +62,11 @@ npm run dev
 
 ดูไฟล์ [API.md](./API.md) — คู่มือ endpoint ทั้งหมดสำหรับต่อกับหน้าเว็บอื่น
 
+## 📊 Flowchart การใช้งาน
+
+- เปิดดูแบบภาพ: http://localhost:3000/docs/flowchart.html
+- ไฟล์ต้นฉบับ: [docs/flowchart.md](./docs/flowchart.md)
+
 ## 🧪 ตรวจคุณภาพ
 
 ```bash
