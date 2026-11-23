@@ -35,7 +35,10 @@ type Order = {
   }>;
 };
 
-const STATUSES = ["รอชำระเงิน", "รอตรวจสอบ", "ชำระเงินแล้ว", "กำลังจัดส่ง", "จัดส่งสำเร็จ", "ยกเลิก"];
+// สถานะคำสั่งซื้อ (ช่วงชำระเงิน)
+const ORDER_STATUSES = ["รอชำระเงิน", "รอตรวจสอบ", "ชำระเงินแล้ว", "ยกเลิก"];
+// สถานะพัสดุ
+const PARCEL_STATUSES = ["เตรียมจัดส่ง", "กำลังจัดส่ง", "จัดส่งสำเร็จ", "ยกเลิก"];
 
 function statusBadge(s: string) {
   if (s === "ยกเลิก") return "badge off";
@@ -68,7 +71,14 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
       const d = await res.json();
       const o: Order = d.order;
       setOrder(o);
-      setStatus(o.order_status);
+
+      // ถ้าสถานะใน DB เป็นช่วงจัดส่ง (มาจากสถานะพัสดุ) ให้ช่องสถานะคำสั่งซื้อแสดงเป็น "ชำระเงินแล้ว"
+      setStatus(
+        ["กำลังจัดส่ง", "จัดส่งสำเร็จ"].includes(o.order_status)
+          ? "ชำระเงินแล้ว"
+          : o.order_status
+      );
+
       const del = o.tb_delivery?.[0];
       if (del) {
         setCompany(del.shipping_company || "ไปรษณีย์ไทย");
@@ -90,6 +100,8 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
   async function save() {
     setMsg("");
     setSaving(true);
+    // ถ้ายกเลิกคำสั่งซื้อ ให้สถานะพัสดุเป็นยกเลิกด้วย
+    const parcelToSend = status === "ยกเลิก" ? "ยกเลิก" : parcel;
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
@@ -98,8 +110,7 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
           order_status: status,
           tracking: {
             shipping_company: company,
-            tracking_number: tracking.trim(),
-            parcel_status: parcel,
+            parcel_status: parcelToSend,
           },
         }),
       });
@@ -110,7 +121,11 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
         return;
       }
       setMsgType("ok");
-      setMsg("บันทึกแล้ว");
+      setMsg(
+        data.tracking_number
+          ? `บันทึกแล้ว · เลขพัสดุ ${data.tracking_number}`
+          : "บันทึกแล้ว"
+      );
       await load();
     } catch {
       setMsgType("err");
@@ -168,42 +183,47 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
 
         <section className="panel">
           <h2 style={{ fontSize: 18 }}>จัดการสถานะ & การจัดส่ง</h2>
+
           <label>
             สถานะคำสั่งซื้อ
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              {STATUSES.map((s) => (
+              {ORDER_STATUSES.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
           </label>
+
           <div className="form-grid">
             <label>
               บริษัทขนส่ง
               <input value={company} onChange={(e) => setCompany(e.target.value)} />
             </label>
             <label>
-              เลขพัสดุ
+              เลขพัสดุ (ระบบสร้างให้อัตโนมัติ)
               <input
-                value={tracking}
-                onChange={(e) => setTracking(e.target.value)}
-                placeholder="เช่น EE123456789TH"
+                value={tracking || "จะสร้างให้เมื่อบันทึก"}
+                readOnly
+                disabled
+                style={{ background: "#faf8f7", color: "#777" }}
               />
             </label>
           </div>
+
           <label>
             สถานะพัสดุ
-            <input
-              value={parcel}
-              onChange={(e) => setParcel(e.target.value)}
-              placeholder="เช่น อยู่ระหว่างทาง"
-            />
+            <select value={parcel} onChange={(e) => setParcel(e.target.value)}>
+              {PARCEL_STATUSES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
           </label>
+
           <button onClick={save} disabled={saving} className="btn full">
             {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
           <p className="hint">
-            * เปลี่ยนเป็น “กำลังจัดส่ง” ต้องมีเลขพัสดุ · เปลี่ยนเป็น “ยกเลิก”
-            ระบบจะคืนสต็อกหนังสือให้อัตโนมัติ
+            * เลขพัสดุสร้างอัตโนมัติเมื่อบันทึก · สถานะพัสดุ “กำลังจัดส่ง/จัดส่งสำเร็จ”
+            จะอัปเดตสถานะคำสั่งซื้อให้เอง · “ยกเลิก” ระบบจะคืนสต็อกหนังสือให้
           </p>
         </section>
       </div>

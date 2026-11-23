@@ -2,21 +2,25 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionAdmin } from "@/lib/auth";
 
-const ALLOWED_STATUS = [
-  "รอชำระเงิน",
-  "รอตรวจสอบ",
-  "ชำระเงินแล้ว",
-  "กำลังจัดส่ง",
-  "จัดส่งสำเร็จ",
-  "ยกเลิก",
-];
+// สถานะคำสั่งซื้อ (ช่วงชำระเงิน) — สถานะจัดส่งย้ายไปอยู่ที่สถานะพัสดุ
+const ORDER_STATUSES = ["รอชำระเงิน", "รอตรวจสอบ", "ชำระเงินแล้ว", "ยกเลิก"];
+
+// สถานะพัสดุ
+const PARCEL_STATUSES = ["เตรียมจัดส่ง", "กำลังจัดส่ง", "จัดส่งสำเร็จ", "ยกเลิก"];
+
+/** สร้างเลขพัสดุอัตโนมัติ รูปแบบไปรษณีย์ไทย เช่น EE123456789TH */
+function generateTrackingNumber(): string {
+  const digits = String(Math.floor(100000000 + Math.random() * 900000000));
+  return `EE${digits}TH`;
+}
 
 /**
- * PATCH /api/admin/orders/[id] — อัปเดตสถานะคำสั่งซื้อ / ใส่เลขพัสดุ
- * body: { order_status?, tracking?: {shipping_company, tracking_number, parcel_status} }
+ * PATCH /api/admin/orders/[id] — อัปเดตสถานะคำสั่งซื้อ + สถานะพัสดุ
+ * body: { order_status?, tracking?: { shipping_company, parcel_status } }
  *
- * - เปลี่ยนสถานะเป็น "กำลังจัดส่ง" → ต้องมีเลขพัสดุ (upsert tb_delivery)
- * - ถ้าคำสั่งซื้อถูกยกเลิก ต้องคืนสต็อกหนังสือให้
+ * - เลขพัสดุระบบสร้างให้อัตโนมัติ (แอดมินไม่ต้องกรอก)
+ * - สถานะพัสดุ กำลังจัดส่ง/จัดส่งสำเร็จ จะถูกสะท้อนเป็นสถานะคำสั่งซื้อให้อัตโนมัติ
+ * - สถานะพัสดุ ยกเลิก = ยกเลิกคำสั่งซื้อ + คืนสต็อก
  */
 export async function PATCH(
   request: Request,
@@ -34,31 +38,28 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const newStatus =
-      body.order_status !== undefined ? String(body.order_status) : null;
+    const submittedStatus =
+      body.order_status !== undefined && body.order_status !== null
+        ? String(body.order_status)
+        : null;
     const tracking = body.tracking
       ? {
           company: String(body.tracking.shipping_company ?? "").trim(),
-          number: String(body.tracking.tracking_number ?? "").trim(),
           parcel: String(body.tracking.parcel_status ?? "").trim(),
         }
       : null;
 
-    if (newStatus && !ALLOWED_STATUS.includes(newStatus)) {
+    if (submittedStatus && !ORDER_STATUSES.includes(submittedStatus)) {
       return NextResponse.json(
         { error: "สถานะคำสั่งซื้อไม่ถูกต้อง" },
         { status: 400 }
       );
     }
-    if (newStatus === "กำลังจัดส่ง") {
-      const hasTracking =
-        tracking?.number || (await hasExistingTracking(orderId));
-      if (!hasTracking) {
-        return NextResponse.json(
-          { error: "ต้องใส่เลขพัสดุก่อนเปลี่ยนสถานะเป็น กำลังจัดส่ง" },
-          { status: 400 }
-        );
-      }
+    if (tracking?.parcel && !PARCEL_STATUSES.includes(tracking.parcel)) {
+      return NextResponse.json(
+        { error: "สถานะพัสดุไม่ถูกต้อง" },
+        { status: 400 }
+      );
     }
 
     const order = await prisma.tb_order.findUnique({
@@ -69,33 +70,55 @@ export async function PATCH(
       return NextResponse.json({ error: "ไม่พบคำสั่งซื้อ" }, { status: 404 });
     }
 
-    const oldStatus = order.order_status;
-    const refundStock = newStatus === "ยกเลิก" && oldStatus !== "ยกเลิก";
+    const existingDelivery = await prisma.tb_delivery.findFirst({
+      where: { order_id: orderId },
+      orderBy: { delivery_id: "desc" },
+    });
+
+    // คำนวณสถานะคำสั่งซื้อสุดท้ายจากสถานะพัสดุ
+    let finalStatus = submittedStatus ?? order.order_status;
+    if (tracking?.parcel === "กำลังจัดส่ง") finalStatus = "กำลังจัดส่ง";
+    else if (tracking?.parcel === "จัดส่งสำเร็จ") finalStatus = "จัดส่งสำเร็จ";
+    else if (tracking?.parcel === "ยกเลิก") finalStatus = "ยกเลิก";
+    else if (tracking?.parcel === "เตรียมจัดส่ง") {
+      // กลับจากสถานะจัดส่ง → กลับไปเป็นชำระเงินแล้ว
+      if (["กำลังจัดส่ง", "จัดส่งสำเร็จ"].includes(finalStatus)) {
+        finalStatus = "ชำระเงินแล้ว";
+      }
+    }
+
+    // เลขพัสดุ: ใช้ของเดิม ถ้ายังไม่มีให้สร้างใหม่
+    const trackingNumber =
+      existingDelivery?.tracking_number || generateTrackingNumber();
+
+    const refundStock = finalStatus === "ยกเลิก" && order.order_status !== "ยกเลิก";
+    const shouldSaveDelivery =
+      Boolean(tracking?.parcel) ||
+      Boolean(existingDelivery) ||
+      ["กำลังจัดส่ง", "จัดส่งสำเร็จ"].includes(finalStatus);
 
     await prisma.$transaction(async (tx) => {
-      if (newStatus) {
+      if (finalStatus && finalStatus !== order.order_status) {
         await tx.tb_order.update({
           where: { order_id: orderId },
-          data: { order_status: newStatus },
+          data: { order_status: finalStatus },
         });
       }
 
-      // ใส่/แก้เลขพัสดุ (มีแล้วก็ upsert)
-      if (tracking && (tracking.number || tracking.parcel)) {
-        const existing = await tx.tb_delivery.findFirst({
-          where: { order_id: orderId },
-          orderBy: { delivery_id: "desc" },
-        });
-        if (existing) {
+      if (shouldSaveDelivery) {
+        const parcelStatus =
+          tracking?.parcel ||
+          existingDelivery?.parcel_status ||
+          (finalStatus === "จัดส่งสำเร็จ" ? "จัดส่งสำเร็จ" : "เตรียมจัดส่ง");
+
+        if (existingDelivery) {
           await tx.tb_delivery.update({
-            where: { delivery_id: existing.delivery_id },
+            where: { delivery_id: existingDelivery.delivery_id },
             data: {
-              shipping_company: tracking.company || existing.shipping_company,
-              tracking_number: tracking.number || existing.tracking_number,
-              parcel_status:
-                tracking.parcel ||
-                newStatus ||
-                existing.parcel_status,
+              shipping_company:
+                tracking?.company || existingDelivery.shipping_company,
+              tracking_number: trackingNumber,
+              parcel_status: parcelStatus,
               delivery_date: new Date(),
             },
           });
@@ -103,10 +126,9 @@ export async function PATCH(
           await tx.tb_delivery.create({
             data: {
               order_id: orderId,
-              shipping_company: tracking.company || "ไปรษณีย์ไทย",
-              tracking_number: tracking.number || null,
-              parcel_status:
-                tracking.parcel || newStatus || "เตรียมจัดส่ง",
+              shipping_company: tracking?.company || "ไปรษณีย์ไทย",
+              tracking_number: trackingNumber,
+              parcel_status: parcelStatus,
               delivery_date: new Date(),
             },
           });
@@ -124,7 +146,7 @@ export async function PATCH(
       }
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, tracking_number: trackingNumber });
   } catch (e) {
     console.error("admin/orders PATCH error:", e);
     return NextResponse.json(
@@ -132,13 +154,4 @@ export async function PATCH(
       { status: 500 }
     );
   }
-}
-
-async function hasExistingTracking(orderId: number) {
-  const d = await prisma.tb_delivery.findFirst({
-    where: { order_id: orderId },
-    orderBy: { delivery_id: "desc" },
-    select: { tracking_number: true },
-  });
-  return Boolean(d?.tracking_number);
 }
