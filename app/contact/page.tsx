@@ -50,7 +50,10 @@ export default function ContactPage() {
               ส่งข้อความถึงเรา
             </h2>
             <p className="mt-1 text-xs text-neutral-400">
-              แบบฟอร์มตัวอย่าง — จะเชื่อมกับระบบแจ้งเตือนในขั้นถัดไป
+              ทุกข้อความถูกบันทึกในฐานข้อมูล — ดูคำตอบได้ที่หน้า{" "}
+              <Link href="/messages" className="text-blue-600 underline">
+                ข้อความของฉัน
+              </Link>
             </p>
             <ContactForm />
           </div>

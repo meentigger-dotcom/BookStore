@@ -24,6 +24,7 @@ export default async function AdminDashboardPage() {
     totalCustomers,
     totalOrders,
     pendingPayments,
+    pendingMessages,
     pendingOrders,
     revenueAgg,
     statusGroups,
@@ -34,6 +35,7 @@ export default async function AdminDashboardPage() {
     prisma.tb_customer.count({ where: { member_status: { not: "ยกเลิก" } } }),
     prisma.tb_order.count(),
     prisma.tb_payment.count({ where: { payment_status: "รอตรวจสอบ" } }),
+    prisma.tb_contact.count({ where: { status: "ใหม่" } }),
     prisma.tb_order.count({
       where: { order_status: { in: ["รอชำระเงิน", "รอตรวจสอบ"] } },
     }),
@@ -62,6 +64,7 @@ export default async function AdminDashboardPage() {
     { label: "รายได้สะสม", value: `฿${fmt(revenue)}`, hint: "คำสั่งซื้อที่ชำระแล้ว" },
     { label: "คำสั่งซื้อทั้งหมด", value: totalOrders, hint: "ทุกสถานะ" },
     { label: "รอตรวจสอบสลิป", value: pendingPayments, hint: "ต้องตรวจด่วน", alert: pendingPayments > 0 },
+    { label: "ข้อความติดต่อใหม่", value: pendingMessages, hint: "รอตอบกลับ", alert: pendingMessages > 0 },
     { label: "รอดำเนินการ", value: pendingOrders, hint: "รอชำระ/รอตรวจ" },
     { label: "หนังสือในระบบ", value: totalBooks, hint: "รายการ" },
     { label: "สมาชิก", value: totalCustomers, hint: "บัญชีที่ใช้งาน" },
@@ -108,6 +111,12 @@ export default async function AdminDashboardPage() {
           className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
         >
           📦 คำสั่งซื้อทั้งหมด
+        </Link>
+        <Link
+          href="/admin/messages"
+          className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
+        >
+          💬 ข้อความติดต่อ
         </Link>
         <Link
           href="/admin/books"

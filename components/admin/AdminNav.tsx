@@ -7,6 +7,7 @@ const links = [
   { href: "/admin", label: "📊 ภาพรวม", exact: true },
   { href: "/admin/orders", label: "📦 คำสั่งซื้อ" },
   { href: "/admin/payments", label: "🧾 สลิปรอตรวจสอบ" },
+  { href: "/admin/messages", label: "💬 ข้อความติดต่อ" },
   { href: "/admin/books", label: "📚 จัดการหนังสือ" },
 ];
 

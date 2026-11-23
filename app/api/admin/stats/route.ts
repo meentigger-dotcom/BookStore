@@ -15,6 +15,7 @@ export async function GET() {
       totalCustomers,
       totalOrders,
       pendingPayments,
+      pendingMessages,
       pendingOrders,
       revenue,
       statusGroups,
@@ -25,6 +26,7 @@ export async function GET() {
       prisma.tb_customer.count({ where: { member_status: { not: "ยกเลิก" } } }),
       prisma.tb_order.count(),
       prisma.tb_payment.count({ where: { payment_status: "รอตรวจสอบ" } }),
+      prisma.tb_contact.count({ where: { status: "ใหม่" } }),
       prisma.tb_order.count({
         where: { order_status: { in: ["รอชำระเงิน", "รอตรวจสอบ"] } },
       }),
@@ -54,6 +56,7 @@ export async function GET() {
         totalCustomers,
         totalOrders,
         pendingPayments,
+        pendingMessages,
         pendingOrders,
         revenue: Number(revenue._sum.total_price ?? 0),
         byStatus: statusGroups.map((g) => ({

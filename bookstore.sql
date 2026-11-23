@@ -398,6 +398,30 @@ ALTER TABLE `tb_order_detail`
 --
 ALTER TABLE `tb_payment`
   ADD CONSTRAINT `tb_payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `tb_order` (`order_id`);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tb_contact` (ข้อความจากหน้าติดต่อเรา)
+--
+
+CREATE TABLE `tb_contact` (
+  `contact_id` int(11) NOT NULL AUTO_INCREMENT,
+  `sender_name` varchar(150) NOT NULL,
+  `sender_email` varchar(100) NOT NULL,
+  `subject` varchar(200) NOT NULL,
+  `message` text NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'ใหม่',
+  `reply_message` text DEFAULT NULL,
+  `replied_by` varchar(150) DEFAULT NULL,
+  `replied_date` datetime DEFAULT NULL,
+  `created_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `cus_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`contact_id`),
+  KEY `cus_id` (`cus_id`),
+  CONSTRAINT `tb_contact_ibfk_1` FOREIGN KEY (`cus_id`) REFERENCES `tb_customer` (`cus_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

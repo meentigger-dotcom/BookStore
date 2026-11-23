@@ -89,6 +89,13 @@ export default async function AccountPage() {
                   >
                     ดูประวัติการสั่งซื้อของคุณ &gt;
                   </Link>
+                  <br />
+                  <Link
+                    href="/messages"
+                    className="text-blue-600 hover:underline"
+                  >
+                    ดูข้อความติดต่อร้าน + คำตอบ &gt;
+                  </Link>
                 </div>
               </div>
             </div>

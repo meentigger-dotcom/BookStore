@@ -60,6 +60,7 @@ model tb_customer {
   member_status String       @db.VarChar(50)
   tb_address    tb_address[]
   tb_order      tb_order[]
+  tb_contact    tb_contact[]
 }
 
 model tb_delivery {
@@ -151,4 +152,21 @@ model tb_type {
   type_id   Int       @id @default(autoincrement())
   type_name String    @db.VarChar(100)
   tb_book   tb_book[]
+}
+
+model tb_contact {
+  contact_id    Int          @id @default(autoincrement())
+  sender_name   String       @db.VarChar(150)
+  sender_email  String       @db.VarChar(100)
+  subject       String       @db.VarChar(200)
+  message       String       @db.Text
+  status        String       @default("ใหม่") @db.VarChar(50)
+  reply_message String?      @db.Text
+  replied_by    String?      @db.VarChar(150)
+  replied_date  DateTime?    @db.DateTime(0)
+  created_date  DateTime     @default(now()) @db.DateTime(0)
+  cus_id        Int?
+  tb_customer   tb_customer? @relation(fields: [cus_id], references: [cus_id], onUpdate: Restrict, map: "tb_contact_ibfk_1")
+
+  @@index([cus_id], map: "cus_id")
 }

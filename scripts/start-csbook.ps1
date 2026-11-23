@@ -83,18 +83,31 @@ if (-not $mysqlReady) {
 }
 
 # ---------- 2) เลือกพอร์ต (80 ก่อน, ถ้าไม่ได้ใช้ 3000) ----------
-$ServerPort = 0
-if (Test-CsbookServer $PreferredPort) {
-  $ServerPort = $PreferredPort
-} elseif (Test-Port "127.0.0.1" $PreferredPort 400) {
-  # พอร์ต 80 ถูกแอปอื่นใช้ → ถอยไป 3000
-  if (Test-CsbookServer $FallbackPort) {
-    $ServerPort = $FallbackPort
-  } else {
-    $ServerPort = $FallbackPort
+$ServerPort = $PreferredPort
+if (-not (Test-CsbookServer $PreferredPort)) {
+  if (Test-Port "127.0.0.1" $PreferredPort 400) {
+    # มีโปรแกรมอื่นจับพอร์ต 80 อยู่ — ถ้าเป็น Apache ของ XAMPP ให้หยุดเพื่อคืนพอร์ต
+    $owners = Get-NetTCPConnection -LocalPort $PreferredPort -State Listen -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty OwningProcess -Unique
+    $freed = $false
+    foreach ($procId in $owners) {
+      $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$procId" -ErrorAction SilentlyContinue
+      if ($proc -and $proc.Name -eq "httpd.exe" -and $proc.ExecutablePath -like "*\xampp\apache\*") {
+        Stop-Process -Id $procId -Force
+        $freed = $true
+      }
+    }
+    if ($freed) {
+      for ($i = 0; $i -lt 15; $i++) {
+        if (-not (Test-Port "127.0.0.1" $PreferredPort 400)) { break }
+        Start-Sleep -Seconds 1
+      }
+    }
+    if (Test-Port "127.0.0.1" $PreferredPort 400) {
+      # ยังถูกแอปอื่นใช้อยู่ → ถอยไปพอร์ต 3000
+      $ServerPort = $FallbackPort
+    }
   }
-} else {
-  $ServerPort = $PreferredPort
 }
 
 # ---------- 3) เว็บเซิร์ฟเวอร์ (production) ----------
