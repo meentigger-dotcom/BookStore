@@ -6,17 +6,20 @@ param(
 
 $ErrorActionPreference = "SilentlyContinue"
 
-# หยุดเว็บเซิร์ฟเวอร์: หาโปรเซสที่ฟังพอร์ต 3000 อยู่
-$conn = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue
-if ($conn) {
-  $pids = $conn | Select-Object -ExpandProperty OwningProcess -Unique
-  foreach ($procId in $pids) {
-    Stop-Process -Id $procId -Force
-    Write-Host "หยุดเว็บเซิร์ฟเวอร์ (PID $procId)"
+# หยุดเว็บเซิร์ฟเวอร์ที่ฟังพอร์ต 80 หรือ 3000
+$stopped = $false
+foreach ($port in @(80, 3000)) {
+  $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+  if ($conn) {
+    $pids = $conn | Select-Object -ExpandProperty OwningProcess -Unique
+    foreach ($procId in $pids) {
+      Stop-Process -Id $procId -Force
+      Write-Host "หยุดเว็บเซิร์ฟเวอร์ (PID $procId, พอร์ต $port)"
+      $stopped = $true
+    }
   }
-} else {
-  Write-Host "เว็บเซิร์ฟเวอร์ไม่ได้เปิดอยู่"
 }
+if (-not $stopped) { Write-Host "เว็บเซิร์ฟเวอร์ไม่ได้เปิดอยู่" }
 
 if (-not $KeepMysql) {
   $mysql = Get-Process mysqld -ErrorAction SilentlyContinue

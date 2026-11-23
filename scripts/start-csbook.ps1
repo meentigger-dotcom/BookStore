@@ -1,4 +1,5 @@
 ﻿# สตาร์ทเว็บ CS&Book แบบพร้อมใช้ (ไม่ต้องเปิด XAMPP / ไม่ต้อง npm run dev)
+# เปิดที่ http://www.csbook.com (พอร์ต 80) — ถ้าพอร์ต 80 ถูกใช้ จะถอยไปใช้ :3000 ให้อัตโนมัติ
 # วิธีใช้: ดับเบิลคลิก CSBook.vbs  หรือรันไฟล์นี้ตรงๆ
 #   powershell -ExecutionPolicy Bypass -File scripts\start-csbook.ps1 -Open
 param(
@@ -8,11 +9,13 @@ param(
 
 $ErrorActionPreference = "SilentlyContinue"
 
-$ProjectDir = Split-Path -Parent $PSScriptRoot
-$MysqlExe   = "C:\xampp\mysql\bin\mysqld.exe"
-$MysqlIni   = "C:\xampp\mysql\bin\my.ini"
-$LogDir     = Join-Path $ProjectDir "logs"
-$ServerPort = 3000
+$ProjectDir   = Split-Path -Parent $PSScriptRoot
+$MysqlExe     = "C:\xampp\mysql\bin\mysqld.exe"
+$MysqlIni     = "C:\xampp\mysql\bin\my.ini"
+$LogDir       = Join-Path $ProjectDir "logs"
+$Domain       = "www.csbook.com"
+$PreferredPort = 80
+$FallbackPort  = 3000
 
 function Test-Port {
   param([string]$TargetHost, [int]$Port, [int]$TimeoutMs = 600)
@@ -36,6 +39,18 @@ function Wait-Port {
     Start-Sleep -Seconds 1
   }
   return $false
+}
+
+# ตรวจว่าเป็นเว็บ CS&Book ของเราจริง (ไม่ใช่แอปอื่นที่จับพอร์ตอยู่)
+function Test-CsbookServer {
+  param([int]$Port)
+  try {
+    $res = Invoke-WebRequest -Uri "http://127.0.0.1:$Port" -UseBasicParsing -TimeoutSec 4 `
+      -Headers @{ Host = $Domain }
+    return ($res.StatusCode -eq 200 -and $res.Content -match "CS&Book")
+  } catch {
+    return $false
+  }
 }
 
 function Show-Error([string]$Message) {
@@ -67,10 +82,23 @@ if (-not $mysqlReady) {
   exit 1
 }
 
-# ---------- 2) เว็บเซิร์ฟเวอร์ (production) ----------
-$serverReady = Test-Port "127.0.0.1" $ServerPort 500
-if (-not $serverReady) {
-  # หา node.exe
+# ---------- 2) เลือกพอร์ต (80 ก่อน, ถ้าไม่ได้ใช้ 3000) ----------
+$ServerPort = 0
+if (Test-CsbookServer $PreferredPort) {
+  $ServerPort = $PreferredPort
+} elseif (Test-Port "127.0.0.1" $PreferredPort 400) {
+  # พอร์ต 80 ถูกแอปอื่นใช้ → ถอยไป 3000
+  if (Test-CsbookServer $FallbackPort) {
+    $ServerPort = $FallbackPort
+  } else {
+    $ServerPort = $FallbackPort
+  }
+} else {
+  $ServerPort = $PreferredPort
+}
+
+# ---------- 3) เว็บเซิร์ฟเวอร์ (production) ----------
+if (-not (Test-CsbookServer $ServerPort)) {
   $node = "C:\Program Files\nodejs\node.exe"
   if (-not (Test-Path $node)) {
     $cmd = Get-Command node -ErrorAction SilentlyContinue
@@ -99,26 +127,18 @@ if (-not $serverReady) {
     -RedirectStandardOutput (Join-Path $LogDir "server.out.log") `
     -RedirectStandardError  (Join-Path $LogDir "server.err.log")
 
-  $serverReady = Wait-Port "127.0.0.1" $ServerPort 60
+  Wait-Port "127.0.0.1" $ServerPort 60 | Out-Null
 }
 
-if (-not $serverReady) {
+if (-not (Test-CsbookServer $ServerPort)) {
   if (-not $Quiet) {
     Show-Error ("เว็บเซิร์ฟเวอร์ไม่ตอบสนอง`n`nดู log ได้ที่:`n" + (Join-Path $LogDir "server.err.log"))
   }
   exit 1
 }
 
-# ---------- 3) รอให้หน้าเว็บตอบ HTTP 200 จริง ----------
-for ($i = 0; $i -lt 30; $i++) {
-  try {
-    $res = Invoke-WebRequest -Uri "http://127.0.0.1:$ServerPort" -UseBasicParsing -TimeoutSec 3
-    if ($res.StatusCode -eq 200) { break }
-  } catch { }
-  Start-Sleep -Seconds 1
-}
-
 # ---------- 4) เปิดเบราว์เซอร์ ----------
+$url = if ($ServerPort -eq 80) { "http://$Domain" } else { "http://$Domain`:$ServerPort" }
 if ($Open) {
-  Start-Process "http://localhost:$ServerPort"
+  Start-Process $url
 }
