@@ -43,24 +43,18 @@ export default function ContactForm() {
 
   if (ticket) {
     return (
-      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-        <p className="text-2xl">✅</p>
-        <p className="mt-1 font-bold text-emerald-800">ส่งข้อความเรียบร้อยแล้ว</p>
-        <p className="mt-1 text-sm text-emerald-700">
-          รหัสข้อความของคุณคือ <b className="text-lg">#{ticket}</b> —
+      <div className="notice ok" style={{ marginTop: 14 }}>
+        <p style={{ fontSize: 22 }}>✅</p>
+        <b>ส่งข้อความเรียบร้อยแล้ว</b>
+        <p style={{ marginTop: 4 }}>
+          รหัสข้อความของคุณคือ <b style={{ fontSize: 16 }}>#{ticket}</b> —
           เก็บไว้ใช้เช็คคำตอบ (ทีมงานตอบภายใน 24 ชั่วโมง)
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href={`/messages?ticket=${ticket}`}
-            className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
-          >
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+          <Link href={`/messages?ticket=${ticket}`} className="btn small">
             ดูข้อความของฉัน
           </Link>
-          <button
-            onClick={() => setTicket(null)}
-            className="rounded-full border border-emerald-300 bg-white px-4 py-2 text-sm font-bold text-emerald-700"
-          >
+          <button className="outline small-btn" onClick={() => setTicket(null)}>
             ส่งข้อความใหม่
           </button>
         </div>
@@ -69,72 +63,49 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-4 space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">ชื่อ-นามสกุล</span>
-          <input
-            name="name"
-            required
-            maxLength={150}
-            type="text"
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
-            placeholder="กรอกชื่อของคุณ"
-          />
+    <form onSubmit={onSubmit} style={{ marginTop: 8 }}>
+      <div className="form-grid">
+        <label>
+          ชื่อ-นามสกุล
+          <input name="name" required maxLength={150} placeholder="กรอกชื่อของคุณ" />
         </label>
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">อีเมล</span>
+        <label>
+          อีเมล
           <input
             name="email"
-            required
             type="email"
+            required
             maxLength={100}
-            className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
             placeholder="you@example.com"
           />
         </label>
       </div>
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-700">หัวข้อ</span>
+      <label>
+        หัวข้อ
         <input
           name="subject"
           required
           maxLength={200}
-          type="text"
-          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
           placeholder="เช่น สอบถามการจัดส่ง"
         />
       </label>
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-700">ข้อความ</span>
+      <label>
+        ข้อความ
         <textarea
           name="message"
           required
           rows={5}
           maxLength={5000}
-          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
           placeholder="พิมพ์ข้อความของคุณที่นี่"
         />
       </label>
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-600">
-          ⚠ {error}
-        </p>
-      )}
+      {error && <p className="notice error">{error}</p>}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={sending}
-          className="rounded-full bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60"
-        >
-          {sending ? "กำลังส่ง..." : "ส่งข้อความ"}
-        </button>
-        <span className="text-xs text-neutral-400">
-          ข้อความจะถูกบันทึกและทีมงานเห็นในหลังบ้านทันที
-        </span>
-      </div>
+      <button type="submit" disabled={sending} className="btn">
+        {sending ? "กำลังส่ง..." : "ส่งข้อความ"}
+      </button>
+      <p className="hint">ข้อความจะถูกบันทึกและทีมงานเห็นในหลังบ้านทันที</p>
     </form>
   );
 }

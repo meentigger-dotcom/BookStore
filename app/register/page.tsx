@@ -1,22 +1,56 @@
+import Link from "next/link";
 import RegisterForm from "@/components/RegisterForm";
 
-export const metadata = { title: "สมัครสมาชิก | CS&Book" };
+export const metadata = { title: "สมัครสมาชิก | CSbooks" };
 
 export default function RegisterPage() {
   return (
-    <div className="mx-auto max-w-md px-4 py-10">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
-        <div className="mb-5 text-center">
-          <p className="text-4xl">📝</p>
-          <h1 className="mt-2 font-display text-2xl font-extrabold text-slate-900">
-            สมัครสมาชิก
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            สมัครฟรี ไม่มีค่าใช้จ่าย ใช้เวลาไม่ถึง 1 นาที
-          </p>
-        </div>
-        <RegisterForm />
+    <div className="auth">
+      <div className="wrap authhead">
+        <Link className="logo" href="/">
+          <b>C</b>
+          <span>
+            CS<strong>books</strong>
+            <small>BOOKS FOR EVERY STORY</small>
+          </span>
+        </Link>
+        <Link href="/">← กลับหน้าร้าน</Link>
       </div>
+
+      <div className="wrap authwrap">
+        <div className="authintro">
+          <small className="eyebrow">JOIN CSBOOKS</small>
+          <h1>
+            เปิดประตูสู่
+            <br />
+            <em>โลกของนักอ่าน</em>
+          </h1>
+          <p>
+            สมัครสมาชิกฟรี เพื่อสั่งซื้อหนังสือ ติดตามสถานะพัสดุ
+            และเก็บประวัติการสั่งซื้อไว้ดูได้ทุกเมื่อ
+          </p>
+          <div className="bookart">
+            <strong>CSbooks</strong>
+            <br />
+            BOOKS FOR EVERY STORY
+            <b>
+              Est.
+              <br />
+              2026
+            </b>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>สมัครสมาชิก</h2>
+          <p className="muted" style={{ marginBottom: 6 }}>
+            กรอกข้อมูลเพื่อสร้างบัญชีใหม่
+          </p>
+          <RegisterForm />
+        </div>
+      </div>
+
+      <div className="authfoot">© 2026 CSbooks. Student project</div>
     </div>
   );
 }

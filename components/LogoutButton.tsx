@@ -19,7 +19,8 @@ export default function LogoutButton() {
       type="button"
       onClick={logout}
       disabled={loading}
-      className="rounded-full border-2 border-red-400 px-5 py-2 text-sm font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-60"
+      className="outline small-btn"
+      style={{ color: "var(--red)" }}
     >
       {loading ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
     </button>

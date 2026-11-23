@@ -13,7 +13,6 @@ type Payment = {
   slip_image: string | null;
   paid_date: string | null;
   verified_by: string | null;
-  verified_date: string | null;
   tb_order: {
     order_id: number;
     order_status: string;
@@ -41,11 +40,11 @@ export default function AdminPaymentsList() {
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   async function decide(paymentId: number, action: "approve" | "reject") {
-    if (action === "reject" && !confirm("ยืนยันปฏิเสธสลิปลงนี้?")) return;
+    if (action === "reject" && !confirm("ยืนยันปฏิเสธสลิปนี้?")) return;
     setBusy(paymentId);
     setMsg("");
     try {
@@ -76,144 +75,120 @@ export default function AdminPaymentsList() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-extrabold text-slate-900">
-        ตรวจสอบสลิปการชำระเงิน
-      </h1>
+      <small className="eyebrow">PAYMENTS</small>
+      <h1>ตรวจสอบสลิปการชำระเงิน</h1>
 
-      <div className="mt-4 flex gap-2">
+      <div className="chips" style={{ marginTop: 0 }}>
         <button
+          className={tab === "pending" ? "selected" : ""}
           onClick={() => setTab("pending")}
-          className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-            tab === "pending"
-              ? "bg-[#1b5eab] text-white"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-          }`}
         >
           รอตรวจสอบ ({pending.length})
         </button>
-        <button
-          onClick={() => setTab("all")}
-          className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-            tab === "all"
-              ? "bg-[#1b5eab] text-white"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-          }`}
-        >
+        <button className={tab === "all" ? "selected" : ""} onClick={() => setTab("all")}>
           ทั้งหมด ({items.length})
         </button>
       </div>
 
-      {msg && (
-        <p
-          className={`mt-4 rounded-lg px-4 py-3 text-sm ${
-            msgType === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-          }`}
-        >
-          {msgType === "ok" ? "✓ " : "⚠ "}
-          {msg}
-        </p>
-      )}
+      {msg && <p className={`notice ${msgType === "ok" ? "ok" : "error"}`}>{msg}</p>}
 
       {loading ? (
-        <p className="mt-6 text-neutral-500">กำลังโหลด...</p>
+        <p className="empty">กำลังโหลด...</p>
       ) : shown.length === 0 ? (
-        <p className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-neutral-500">
-          {tab === "pending" ? "ไม่มีสลิปรอตรวจสอบ 🎉" : "ยังไม่มีสลิป"}
-        </p>
+        <p className="empty">{tab === "pending" ? "ไม่มีสลิปรอตรวจสอบ 🎉" : "ยังไม่มีสลิป"}</p>
       ) : (
-        <ul className="mt-5 space-y-4">
-          {shown.map((p) => (
-            <li
-              key={p.payment_id}
-              className="rounded-xl border border-neutral-200 bg-white p-4"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <Link
-                    href={`/admin/orders/${p.tb_order.order_id}`}
-                    className="font-bold text-blue-700 hover:underline"
-                  >
-                    คำสั่งซื้อ #{p.tb_order.order_id}
-                  </Link>
-                  <span className="ml-2 text-sm text-neutral-500">
-                    {p.tb_order.tb_customer.cus_name} ({p.tb_order.tb_customer.email})
-                  </span>
-                </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
-                    p.payment_status === "ยืนยันแล้ว"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : p.payment_status === "ไม่ผ่าน"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-sky-100 text-sky-700"
-                  }`}
-                >
-                  {p.payment_status}
-                </span>
-              </div>
-
-              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-neutral-600">
-                <span className="font-bold text-[#f04e23]">฿{fmt(Number(p.amount))}</span>
-                {Math.abs(Number(p.amount) - Number(p.tb_order.total_price)) > 0.01 && (
-                  <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
-                    ⚠ ยอดไม่ตรง (ต้อง ฿{fmt(Number(p.tb_order.total_price))})
-                  </span>
-                )}
-                <span>{p.payment_method}</span>
-                <span>อ้างอิง: {p.transfer_ref ?? "-"}</span>
-                {p.paid_date && (
-                  <span>แจ้งเมื่อ {new Date(p.paid_date).toLocaleString("th-TH")}</span>
-                )}
-                {p.verified_by && (
-                  <span className="text-emerald-600">
-                    ตรวจโดย {p.verified_by}
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                <div className="min-w-0 flex-1">
-                  {p.slip_image ? (
-                    <a href={p.slip_image} target="_blank" rel="noreferrer">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={p.slip_image}
-                        alt="สลิปการโอนเงิน"
-                        className="max-h-64 rounded-lg border border-neutral-200 bg-neutral-50 object-contain"
-                      />
-                    </a>
-                  ) : (
-                    <p className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-400">
-                      ไม่มีรูปสลิป
-                    </p>
-                  )}
-                </div>
-
-                {p.payment_status === "รอตรวจสอบ" && (
-                  <div className="flex shrink-0 flex-col gap-2 sm:w-40">
-                    <button
-                      onClick={() => decide(p.payment_id, "approve")}
-                      disabled={busy === p.payment_id}
-                      className="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      ✓ อนุมัติ
-                    </button>
-                    <button
-                      onClick={() => decide(p.payment_id, "reject")}
-                      disabled={busy === p.payment_id}
-                      className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
-                    >
-                      ✕ ปฏิเสธ
-                    </button>
-                    <p className="text-[11px] leading-snug text-neutral-400">
-                      อนุมัติ → คำสั่งซื้อเป็น “ชำระเงินแล้ว”
+        <div className="card-list" style={{ marginTop: 15 }}>
+          {shown.map((p) => {
+            const mismatch =
+              Math.abs(Number(p.amount) - Number(p.tb_order.total_price)) > 0.01;
+            return (
+              <div key={p.payment_id} className="panel">
+                <div className="section-head" style={{ marginBottom: 8 }}>
+                  <div>
+                    <Link className="text-link" href={`/admin/orders/${p.tb_order.order_id}`}>
+                      คำสั่งซื้อ #{p.tb_order.order_id}
+                    </Link>
+                    <p className="muted">
+                      {p.tb_order.tb_customer.cus_name} ({p.tb_order.tb_customer.email})
                     </p>
                   </div>
+                  <span
+                    className={
+                      p.payment_status === "ยืนยันแล้ว"
+                        ? "badge ok"
+                        : p.payment_status === "ไม่ผ่าน"
+                          ? "badge off"
+                          : "badge info"
+                    }
+                  >
+                    {p.payment_status}
+                  </span>
+                </div>
+
+                <div style={{ fontSize: 12, display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <b style={{ color: "var(--red)" }}>฿{fmt(Number(p.amount))}</b>
+                  <span>{p.payment_method}</span>
+                  <span>อ้างอิง: {p.transfer_ref ?? "-"}</span>
+                  {p.paid_date && (
+                    <span>แจ้งเมื่อ {new Date(p.paid_date).toLocaleString("th-TH")}</span>
+                  )}
+                  {p.verified_by && <span className="badge ok">ตรวจโดย {p.verified_by}</span>}
+                </div>
+
+                {mismatch && (
+                  <p className="notice error">
+                    ⚠ ยอดไม่ตรงกับคำสั่งซื้อ (ต้อง ฿{fmt(Number(p.tb_order.total_price))})
+                    — ไม่สามารถอนุมัติได้
+                  </p>
                 )}
+
+                <div style={{ display: "flex", gap: 15, marginTop: 12, flexWrap: "wrap" }}>
+                  <div>
+                    {p.slip_image ? (
+                      <a href={p.slip_image} target="_blank" rel="noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={p.slip_image}
+                          alt="สลิปการโอนเงิน"
+                          style={{
+                            maxHeight: 240,
+                            border: "1px solid var(--line)",
+                            background: "#fafafa",
+                            objectFit: "contain",
+                          }}
+                        />
+                      </a>
+                    ) : (
+                      <p className="muted">ไม่มีรูปสลิป</p>
+                    )}
+                  </div>
+
+                  {p.payment_status === "รอตรวจสอบ" && (
+                    <div style={{ display: "grid", gap: 8, alignContent: "start", minWidth: 150 }}>
+                      <button
+                        onClick={() => decide(p.payment_id, "approve")}
+                        disabled={busy === p.payment_id}
+                        className="btn small"
+                        style={{ background: "var(--green)" }}
+                      >
+                        ✓ อนุมัติ
+                      </button>
+                      <button
+                        onClick={() => decide(p.payment_id, "reject")}
+                        disabled={busy === p.payment_id}
+                        className="outline small-btn"
+                        style={{ color: "var(--red)" }}
+                      >
+                        ✕ ปฏิเสธ
+                      </button>
+                      <small className="muted">อนุมัติ → ชำระเงินแล้ว</small>
+                    </div>
+                  )}
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import prisma from "@/lib/prisma";
 import { priceOf, fmt } from "@/lib/book";
 import AddToCartButton from "@/components/AddToCartButton";
+import { coverFor } from "@/lib/covers";
 
 export default async function BookDetailPage({
   params,
@@ -31,97 +32,91 @@ export default async function BookDetailPage({
 
   const { original, price, percent } = priceOf(book);
   const inStock = book.stock_quantity > 0;
+  const cover = book.image || coverFor(book.book_id);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <nav className="text-xs text-neutral-500">
-        <Link href="/" className="hover:text-orange-500">
-          หน้าแรก
-        </Link>
-        <span className="mx-1">/</span>
-        <Link href={`/books?category=${book.category_id}`} className="hover:text-orange-500">
+    <div className="wrap">
+      <nav className="breadcrumb">
+        <Link href="/">หน้าแรก</Link>
+        <span> / </span>
+        <Link href={`/books?category=${book.category_id}`}>
           {book.tb_category.category_name}
         </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-700">{book.book_name}</span>
+        <span> / </span>
+        <span>{book.book_name}</span>
       </nav>
 
-      <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* ปกหนังสือ */}
-        <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-xl border border-neutral-200 bg-[linear-gradient(135deg,#fdeee9_0%,#eef4fd_100%)]">
+      <div className="detail">
+        <div style={{ position: "relative" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="detail-cover" src={cover} alt={`ปก ${book.book_name}`} />
           {percent > 0 && (
-            <span className="absolute left-3 top-3 z-10 rounded-md bg-red-500 px-2 py-1 text-sm font-bold text-white shadow">
+            <span className="sale-tag" style={{ top: 10, left: 10 }}>
               -{percent}%
             </span>
           )}
-          <div className="flex h-full items-center justify-center">
-            <span className="text-8xl opacity-75">📖</span>
-          </div>
         </div>
 
-        {/* ข้อมูลหนังสือ */}
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-slate-900 sm:text-3xl">
-            {book.book_name}
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            โดย {book.author ?? "ไม่ระบุผู้แต่ง"} | {book.tb_publisher.publisher_name}
+          <span className="product-category">{book.tb_category.category_name}</span>
+          <h1>{book.book_name}</h1>
+          <p className="detail-author">
+            โดย {book.author ?? "ไม่ระบุผู้แต่ง"} |{" "}
+            {book.tb_publisher.publisher_name}
           </p>
 
-          <div className="mt-4 flex items-end gap-3">
-            <span className="price-tag font-display text-3xl">฿ {fmt(price)}</span>
+          <div>
+            <span className="detail-price">฿{fmt(price)}</span>
             {percent > 0 && (
-              <span className="text-lg text-neutral-400 line-through">
-                ฿ {fmt(original)}
+              <span className="old-price" style={{ marginLeft: 10, fontSize: 13 }}>
+                ฿{fmt(original)}
               </span>
             )}
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700">
-              {book.tb_category.category_name}
-            </span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
-              {book.tb_type.type_name}
-            </span>
-            {book.grade_level && (
-              <span className="rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-700">
-                ระดับ {book.grade_level}
-              </span>
-            )}
-          </div>
-
-          <p className="mt-4 text-sm leading-relaxed text-slate-600">
+          <p className="detail-desc">
             {book.description ?? "ยังไม่มีรายละเอียดหนังสือเล่มนี้"}
           </p>
 
-          <dl className="mt-5 space-y-2 border-t border-neutral-200 pt-4 text-sm">
-            <div className="flex gap-2">
-              <dt className="w-28 text-neutral-500">ISBN</dt>
-              <dd className="font-semibold text-slate-700">{book.isbn}</dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-28 text-neutral-500">สต็อกคงเหลือ</dt>
-              <dd className={`font-semibold ${inStock ? "text-emerald-600" : "text-red-500"}`}>
-                {inStock ? `${book.stock_quantity} เล่ม` : "สินค้าหมด"}
-              </dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-28 text-neutral-500">สถานะ</dt>
-              <dd className="font-semibold text-slate-700">{book.status}</dd>
-            </div>
-          </dl>
+          <div className="chips" style={{ marginTop: 4 }}>
+            <span className="badge info">{book.tb_type.type_name}</span>
+            {book.grade_level && (
+              <span className="badge warn">ระดับ {book.grade_level}</span>
+            )}
+            <span className={inStock ? "badge ok" : "badge off"}>
+              {inStock ? `พร้อมส่ง ${book.stock_quantity} เล่ม` : "สินค้าหมด"}
+            </span>
+          </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="meta-table">
+            <div>
+              <span>ISBN</span>
+              <b>{book.isbn}</b>
+            </div>
+            <div>
+              <span>หมวดหมู่</span>
+              <b>{book.tb_category.category_name}</b>
+            </div>
+            <div>
+              <span>สำนักพิมพ์</span>
+              <b>{book.tb_publisher.publisher_name}</b>
+            </div>
+            <div>
+              <span>สถานะ</span>
+              <b>{book.status}</b>
+            </div>
+          </div>
+
+          <div className="detail-actions">
             <AddToCartButton bookId={book.book_id} stock={book.stock_quantity} />
-            <Link
-              href="/cart"
-              className="inline-flex items-center rounded-2xl border-2 border-slate-800 px-6 py-3 font-display font-bold text-slate-800 transition hover:bg-slate-800 hover:text-white"
-            >
+            <Link href="/cart" className="btn outline">
               ดูตะกร้า
             </Link>
+            <Link href="/books" className="btn outline">
+              เลือกซื้อเพิ่ม
+            </Link>
           </div>
-          <p className="mt-3 text-xs text-neutral-400">
+          <p className="hint">
             * ราคาและสต็อกดึงจากฐานข้อมูลสด — ระบบจะตัดสต็อกจริงตอนยืนยันคำสั่งซื้อ
           </p>
         </div>

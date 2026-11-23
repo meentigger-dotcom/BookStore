@@ -21,7 +21,10 @@ export default async function BooksPage({
     prisma.tb_book
       .findMany({
         where,
-        include: { tb_have_discount: { include: { tb_discount: true } } },
+        include: {
+          tb_have_discount: { include: { tb_discount: true } },
+          tb_category: { select: { category_name: true } },
+        },
         orderBy: { book_id: sort === "new" ? "desc" : "asc" },
         take: 100,
       })
@@ -39,45 +42,50 @@ export default async function BooksPage({
     ? activeCategory.category_name
     : q
       ? `ผลค้นหา: "${q}"`
-      : "หนังสือทั้งหมด";
+      : sort === "new"
+        ? "หนังสือมาใหม่"
+        : "หนังสือทั้งหมด";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* breadcrumb */}
-      <nav className="text-xs text-neutral-500">
-        <Link href="/" className="hover:text-orange-500">
-          หน้าแรก
-        </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-700">{heading}</span>
+    <div className="wrap page-section">
+      <nav className="breadcrumb">
+        <Link href="/">หน้าแรก</Link>
+        <span> / </span>
+        <span>{heading}</span>
       </nav>
 
-      <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="section-title font-display text-3xl">{heading}</h1>
-        <p className="text-sm text-neutral-500">พบ {books.length} รายการ</p>
+      <div className="section-head" style={{ marginTop: 14 }}>
+        <div>
+          <small className="eyebrow">
+            {sort === "new" ? "NEW ARRIVALS" : "CSBOOKS COLLECTION"}
+          </small>
+          <h1 style={{ fontSize: 30, margin: "8px 0" }}>{heading}</h1>
+          <p className="muted">พบ {books.length} รายการ</p>
+        </div>
+        <form action="/books" className="search" style={{ maxWidth: 340 }}>
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="ค้นหาชื่อหนังสือหรือผู้แต่ง"
+            aria-label="ค้นหาหนังสือ"
+          />
+          <button type="submit">ค้นหา</button>
+        </form>
       </div>
 
       {/* ตัวกรองหมวดหมู่ */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link
-          href="/books"
-          className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-            !activeCategory
-              ? "border-blue-600 bg-blue-600 text-white"
-              : "border-neutral-300 bg-white text-slate-600 hover:border-blue-400"
-          }`}
-        >
+      <div className="chips">
+        <Link href="/books" className={!activeCategory && !q ? "selected" : ""}>
           ทั้งหมด
         </Link>
         {categories.map((c) => (
           <Link
             key={c.category_id}
             href={`/books?category=${c.category_id}`}
-            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
-              activeCategory?.category_id === c.category_id
-                ? "border-blue-600 bg-blue-600 text-white"
-                : "border-neutral-300 bg-white text-slate-600 hover:border-blue-400"
-            }`}
+            className={
+              activeCategory?.category_id === c.category_id ? "selected" : ""
+            }
           >
             {c.category_name}
           </Link>
@@ -86,24 +94,19 @@ export default async function BooksPage({
 
       {/* รายการสินค้า */}
       {books.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid" style={{ marginTop: 25 }}>
           {books.map((b) => (
-            <div key={b.book_id} className="flex justify-center">
-              <BookCard book={b} />
-            </div>
+            <BookCard key={b.book_id} book={b} />
           ))}
         </div>
       ) : (
-        <div className="mt-10 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-          <p className="text-4xl">🔍</p>
-          <p className="mt-2 font-semibold text-slate-700">ไม่พบหนังสือที่ค้นหา</p>
-          <p className="mt-1 text-sm text-neutral-500">
+        <div className="empty">
+          <p style={{ fontSize: 30 }}>🔍</p>
+          <p style={{ marginTop: 8 }}>ไม่พบหนังสือที่ค้นหา</p>
+          <p style={{ marginTop: 4 }}>
             ลองค้นหาด้วยคำอื่น หรือเลือกหมวดหมู่ใหม่
           </p>
-          <Link
-            href="/books"
-            className="mt-4 inline-block rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
+          <Link className="btn small" href="/books" style={{ marginTop: 15 }}>
             ดูหนังสือทั้งหมด
           </Link>
         </div>

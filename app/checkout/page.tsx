@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCart, clearCart, CART_EVENT } from "@/lib/cart";
 import { fmt } from "@/lib/book";
+import { coverFor } from "@/lib/covers";
 
 type CartBook = {
   book_id: number;
@@ -15,6 +16,7 @@ type CartBook = {
   original: number;
   percent: number;
   stock_quantity: number;
+  quantity?: number;
 };
 
 type Address = {
@@ -42,7 +44,6 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // เช็ค login
   useEffect(() => {
     (async () => {
       try {
@@ -67,7 +68,6 @@ export default function CheckoutPage() {
     })();
   }, [router]);
 
-  // โหลดราคาสดจากตะกร้า
   const refresh = useCallback(async () => {
     const entries = getCart();
     if (entries.length === 0) {
@@ -92,7 +92,7 @@ export default function CheckoutPage() {
           percent: Number(b.percent),
           stock_quantity: Number(b.stock_quantity),
           quantity: qtyMap.get(Number(b.book_id)) ?? 1,
-        })) as (CartBook & { quantity: number })[]
+        })) as CartBook[]
       );
     } catch {
       setItems([]);
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "เกิดข้อผิดพลาด");
-        refresh(); // สต็อกอาจเปลี่ยน → โหลดใหม่
+        refresh();
         return;
       }
       clearCart();
@@ -169,25 +169,20 @@ export default function CheckoutPage() {
 
   if (authLoading || cartLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center text-neutral-500">
-          กำลังเตรียมข้อมูล...
-        </div>
+      <div className="wrap page-section">
+        <p className="empty">กำลังเตรียมข้อมูล...</p>
       </div>
     );
   }
 
   if (typedItems.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="section-title font-display text-3xl">ยืนยันคำสั่งซื้อ</h1>
-        <div className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-          <p className="text-5xl">🛒</p>
-          <p className="mt-3 font-semibold text-slate-700">ตะกร้าว่าง — ยังไม่มีสินค้า</p>
-          <Link
-            href="/books"
-            className="mt-5 inline-block rounded-full bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
+      <div className="wrap page-section">
+        <h1 style={{ fontSize: 30 }}>ยืนยันคำสั่งซื้อ</h1>
+        <div className="empty">
+          <p style={{ fontSize: 34 }}>🛒</p>
+          <p style={{ marginTop: 8 }}>ตะกร้าว่าง — ยังไม่มีสินค้า</p>
+          <Link className="btn small" href="/books" style={{ marginTop: 15 }}>
             เลือกซื้อหนังสือ
           </Link>
         </div>
@@ -196,166 +191,161 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="section-title font-display text-3xl">ยืนยันคำสั่งซื้อ</h1>
+    <div className="wrap page-section">
+      <nav className="breadcrumb">
+        <Link href="/">หน้าแรก</Link>
+        <span> / </span>
+        <Link href="/cart">ตะกร้า</Link>
+        <span> / </span>
+        <span>ยืนยันคำสั่งซื้อ</span>
+      </nav>
 
-      {/* สินค้า */}
-      <section className="mt-6">
-        <h2 className="font-bold text-slate-700">สินค้า ({totalQty} ชิ้น)</h2>
-        <ul className="mt-3 divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
-          {typedItems.map((i) => (
-            <li key={i.book_id} className="flex items-center gap-3 p-3">
-              <div className="h-16 w-12 shrink-0 overflow-hidden rounded bg-neutral-100">
-                {i.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={i.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="grid h-full place-items-center">📘</div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-sm font-semibold">{i.book_name}</p>
-                <p className="text-xs text-neutral-500">x {i.quantity}</p>
-              </div>
-              <span className="text-sm font-bold text-[#f04e23]">
-                ฿{fmt(i.price * i.quantity)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <h1 style={{ fontSize: 30, margin: "14px 0 0" }}>ยืนยันคำสั่งซื้อ</h1>
 
-      {/* ที่อยู่ */}
-      <section className="mt-6">
-        <h2 className="font-bold text-slate-700">ที่อยู่สำหรับจัดส่ง</h2>
-        <p className="mt-1 text-xs text-neutral-500">
-          * ที่อยู่ใหม่จะถูกบันทึกเป็นรายการใหม่ทุกครั้งที่สั่งซื้อ
-          รายการเดิมจะไม่ถูกแก้ไข (เก็บที่อยู่ ณ วันสั่งซื้อ)
-        </p>
+      <div className="cart-layout">
+        <div>
+          {/* ที่อยู่ */}
+          <section className="panel">
+            <h2 style={{ fontSize: 18 }}>ที่อยู่สำหรับจัดส่ง</h2>
+            <p className="hint" style={{ marginTop: 4 }}>
+              * ที่อยู่ใหม่จะถูกบันทึกเป็นรายการใหม่ทุกครั้งที่สั่งซื้อ
+              รายการเดิมจะไม่ถูกแก้ไข (เก็บที่อยู่ ณ วันสั่งซื้อ)
+            </p>
 
-        <div className="mt-3 space-y-2">
-          {me && me.addresses.length > 0 && (
-            <div className="rounded-xl border border-neutral-200 bg-white p-4">
-              <label className="flex cursor-pointer items-start gap-2">
+            {me && me.addresses.length > 0 && (
+              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
                   type="radio"
                   checked={mode === "pick"}
                   onChange={() => setMode("pick")}
-                  className="mt-1"
+                  style={{ width: "auto" }}
                 />
-                <span className="text-sm font-semibold">ใช้ที่อยู่ที่บันทึกไว้</span>
+                ใช้ที่อยู่ที่บันทึกไว้
               </label>
-              {mode === "pick" && (
-                <div className="mt-2 space-y-2 pl-6">
-                  {me.addresses.map((a) => (
-                    <label
-                      key={a.address_id}
-                      className={`block cursor-pointer rounded-lg border p-3 text-sm transition ${
-                        pickedId === a.address_id
-                          ? "border-[#f04e23] bg-orange-50"
-                          : "border-neutral-200 hover:border-neutral-300"
-                      }`}
-                    >
-                      <span className="flex items-start gap-2">
-                        <input
-                          type="radio"
-                          name="address"
-                          checked={pickedId === a.address_id}
-                          onChange={() => setPickedId(a.address_id)}
-                          className="mt-1"
-                        />
-                        <span>
-                          <span className="block leading-snug">{a.address_detail}</span>
-                          <span className="mt-1 block text-xs text-neutral-500">
-                            โทร {a.receiver_phone}
-                          </span>
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          <div className="rounded-xl border border-neutral-200 bg-white p-4">
-            <label className="flex cursor-pointer items-start gap-2">
+            {mode === "pick" && me && (
+              <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
+                {me.addresses.map((a) => (
+                  <label
+                    key={a.address_id}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "flex-start",
+                      border: "1px solid var(--line)",
+                      padding: 12,
+                      margin: 0,
+                      background:
+                        pickedId === a.address_id ? "#fdf6f3" : "#fff",
+                      borderColor:
+                        pickedId === a.address_id ? "var(--red)" : "var(--line)",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="address"
+                      checked={pickedId === a.address_id}
+                      onChange={() => setPickedId(a.address_id)}
+                      style={{ width: "auto", marginTop: 3 }}
+                    />
+                    <span>
+                      <span style={{ fontSize: 12 }}>{a.address_detail}</span>
+                      <small className="muted" style={{ display: "block", marginTop: 4 }}>
+                        โทร {a.receiver_phone}
+                      </small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
                 type="radio"
                 checked={mode === "new"}
                 onChange={() => setMode("new")}
-                className="mt-1"
+                style={{ width: "auto" }}
               />
-              <span className="text-sm font-semibold">กรอกที่อยู่ใหม่</span>
+              กรอกที่อยู่ใหม่
             </label>
+
             {mode === "new" && (
-              <div className="mt-3 space-y-3 pl-6">
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-600">
-                    ที่อยู่ผู้รับ
-                  </label>
+              <>
+                <label>
+                  ที่อยู่ผู้รับ
                   <textarea
                     value={newDetail}
                     onChange={(e) => setNewDetail(e.target.value)}
                     rows={3}
                     placeholder="บ้านเลขที่ ซอย ถนน ตำบล อำเภอ จังหวัด รหัสไปรษณีย์"
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-[#f04e23]"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-600">
-                    เบอร์โทรศัพท์ผู้รับ
-                  </label>
+                </label>
+                <label>
+                  เบอร์โทรศัพท์ผู้รับ
                   <input
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
                     inputMode="tel"
                     placeholder="08xxxxxxxx"
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-[#f04e23]"
                   />
-                </div>
-              </div>
+                </label>
+              </>
             )}
+          </section>
+
+          {/* สินค้า */}
+          <section className="panel" style={{ marginTop: 15 }}>
+            <h2 style={{ fontSize: 18 }}>รายการสินค้า ({totalQty} ชิ้น)</h2>
+            <div style={{ marginTop: 8 }}>
+              {typedItems.map((i) => (
+                <div key={i.book_id} className="order-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={i.image || coverFor(i.book_id)} alt="" />
+                  <div style={{ flex: 1 }}>
+                    <b style={{ fontSize: 12 }}>{i.book_name}</b>
+                    <p className="muted">x {i.quantity}</p>
+                  </div>
+                  <b className="price" style={{ fontSize: 13 }}>
+                    ฿{fmt(i.price * i.quantity)}
+                  </b>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* สรุปยอด */}
+        <aside className="summary">
+          <h2>สรุปการชำระเงิน</h2>
+          <div className="summary-line">
+            <span>ยอดสินค้า</span>
+            <span>฿{fmt(total)}</span>
           </div>
-        </div>
-      </section>
+          <div className="summary-line">
+            <span>ค่าจัดส่ง</span>
+            <span style={{ color: "var(--green)" }}>ฟรี</span>
+          </div>
+          <div className="summary-line total">
+            <span>ยอดชำระทั้งหมด</span>
+            <span style={{ color: "var(--red)" }}>฿{fmt(total)}</span>
+          </div>
 
-      {/* สรุปยอด */}
-      <section className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
-        <div className="flex justify-between text-sm">
-          <span className="text-neutral-600">ยอดสินค้า</span>
-          <span>฿{fmt(total)}</span>
-        </div>
-        <div className="mt-1 flex justify-between text-sm">
-          <span className="text-neutral-600">ค่าจัดส่ง</span>
-          <span className="text-emerald-600">ฟรี</span>
-        </div>
-        <div className="mt-3 flex items-baseline justify-between border-t border-neutral-200 pt-3">
-          <span className="font-bold">ยอดชำระทั้งหมด</span>
-          <span className="text-2xl font-extrabold text-[#f04e23]">฿{fmt(total)}</span>
-        </div>
-      </section>
+          {error && <p className="notice error">⚠ {error}</p>}
 
-      {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-          ⚠ {error}
-        </p>
-      )}
-
-      <button
-        onClick={submitOrder}
-        disabled={submitting}
-        className="btn-chunky mt-5 w-full py-3 text-base disabled:opacity-50"
-      >
-        {submitting ? "กำลังสั่งซื้อ..." : "ยืนยันคำสั่งซื้อ →"}
-      </button>
-
-      <Link
-        href="/cart"
-        className="mt-3 block text-center text-sm text-neutral-500 underline"
-      >
-        กลับไปแก้ไขตะกร้า
-      </Link>
+          <button
+            onClick={submitOrder}
+            disabled={submitting}
+            className="btn full"
+            style={{ marginTop: 16 }}
+          >
+            {submitting ? "กำลังสั่งซื้อ..." : "ยืนยันคำสั่งซื้อ →"}
+          </button>
+          <Link className="center" href="/cart" style={{ display: "block" }}>
+            กลับไปแก้ไขตะกร้า
+          </Link>
+        </aside>
+      </div>
     </div>
   );
 }

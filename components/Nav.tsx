@@ -1,47 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
-const baseLinks = [
+type NavLink = { href: string; label: string; match?: string; query?: string };
+
+const baseLinks: NavLink[] = [
   { href: "/", label: "หน้าแรก" },
+  { href: "/books", label: "หนังสือทั้งหมด" },
+  { href: "/#categories", label: "หมวดหมู่" },
   { href: "/promotions", label: "โปรโมชั่น" },
+  { href: "/books?sort=new", label: "หนังสือมาใหม่", match: "/books", query: "sort=new" },
   { href: "/contact", label: "ติดต่อเรา" },
 ];
 
 export default function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const params = useSearchParams();
+  const current = params.toString();
 
-  const links = isAdmin
+  const links: NavLink[] = isAdmin
     ? [...baseLinks, { href: "/admin", label: "แผงควบคุม" }]
     : baseLinks;
 
+  function isActive(l: NavLink) {
+    if (l.href.includes("#")) return false;
+    if (l.href === "/") return pathname === "/";
+    if (l.query) return pathname === (l.match ?? l.href) && current === l.query;
+    if (l.href === "/books") return pathname === "/books" && !current;
+    return pathname.startsWith(l.href.split("?")[0]);
+  }
+
   return (
-    <nav className="mx-auto flex w-fit items-center gap-1 rounded-full border-2 border-black bg-[#f9b99b] px-3 py-1.5 shadow-sm">
-      <Link
-        href="/"
-        aria-label="หน้าแรก"
-        className={`mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-black bg-white/70 text-base transition hover:bg-white ${
-          pathname === "/" ? "bg-white" : ""
-        }`}
-      >
-        🏠
-      </Link>
-      {links.map((l) => {
-        const active =
-          l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-        return (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={`rounded-full px-4 py-1.5 font-display text-base font-bold text-black transition hover:bg-black/10 ${
-              active ? "bg-black/10" : ""
-            }`}
-          >
-            {l.label}
-          </Link>
-        );
-      })}
+    <nav className="main-nav">
+      {links.map((l) => (
+        <Link key={l.href} href={l.href} className={isActive(l) ? "active" : ""}>
+          {l.label}
+        </Link>
+      ))}
     </nav>
   );
 }

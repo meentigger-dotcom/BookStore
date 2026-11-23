@@ -18,14 +18,12 @@ type OrderRow = {
   tb_delivery: Array<{ tracking_number: string | null }>;
 };
 
-const STATUS_STYLE: Record<string, string> = {
-  "รอชำระเงิน": "bg-amber-100 text-amber-800",
-  "รอตรวจสอบ": "bg-sky-100 text-sky-800",
-  "ชำระเงินแล้ว": "bg-emerald-100 text-emerald-800",
-  "กำลังจัดส่ง": "bg-indigo-100 text-indigo-800",
-  "จัดส่งสำเร็จ": "bg-green-100 text-green-800",
-  "ยกเลิก": "bg-neutral-200 text-neutral-600",
-};
+function statusClass(s: string) {
+  if (s === "ยกเลิก") return "badge off";
+  if (s === "จัดส่งสำเร็จ") return "badge ok";
+  if (s === "กำลังจัดส่ง") return "badge info";
+  return "badge warn";
+}
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -51,79 +49,70 @@ export default function OrdersPage() {
   }, [router]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="section-title font-display text-3xl">ประวัติการสั่งซื้อ</h1>
+    <div className="wrap page-section">
+      <nav className="breadcrumb">
+        <Link href="/">หน้าแรก</Link>
+        <span> / </span>
+        <span>ประวัติการสั่งซื้อ</span>
+      </nav>
+
+      <div className="section-head" style={{ marginTop: 14 }}>
+        <div>
+          <small className="eyebrow">MY ORDERS</small>
+          <h1 style={{ fontSize: 30, margin: "8px 0" }}>ประวัติการสั่งซื้อ</h1>
+        </div>
+        <Link className="text-link" href="/track">
+          ติดตามพัสดุ →
+        </Link>
+      </div>
 
       {loading ? (
-        <div className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center text-neutral-500">
-          กำลังโหลด...
-        </div>
+        <p className="empty">กำลังโหลด...</p>
       ) : orders.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-          <p className="text-5xl">📦</p>
-          <p className="mt-3 font-semibold text-slate-700">ยังไม่มีคำสั่งซื้อ</p>
-          <Link
-            href="/books"
-            className="mt-5 inline-block rounded-full bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
+        <div className="empty">
+          <p style={{ fontSize: 34 }}>📦</p>
+          <p style={{ marginTop: 8 }}>ยังไม่มีคำสั่งซื้อ</p>
+          <Link className="btn small" href="/books" style={{ marginTop: 15 }}>
             เริ่มเลือกซื้อหนังสือ
           </Link>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <div className="card-list">
           {orders.map((o) => (
-            <li key={o.order_id}>
-              <Link
-                href={`/orders/${o.order_id}`}
-                className="block rounded-xl border border-neutral-200 bg-white p-4 transition hover:border-[#f04e23] hover:shadow-sm"
+            <Link key={o.order_id} href={`/orders/${o.order_id}`} className="list-card">
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <b>คำสั่งซื้อ #{o.order_id}</b>
+                <span className={statusClass(o.order_status)}>{o.order_status}</span>
+              </div>
+              <p style={{ marginTop: 4 }}>
+                {new Date(o.order_date).toLocaleDateString("th-TH")} ·{" "}
+                {o.tb_order_detail.length} รายการ ·{" "}
+                {o.tb_delivery[0]?.tracking_number
+                  ? `เลขพัสดุ ${o.tb_delivery[0].tracking_number}`
+                  : "ยังไม่มีเลขพัสดุ"}
+              </p>
+              <p style={{ marginTop: 6, fontSize: 12, color: "var(--dark)" }}>
+                {o.tb_order_detail
+                  .slice(0, 3)
+                  .map((d) => d.tb_book.book_name)
+                  .join(" · ")}
+              </p>
+              <div
+                style={{
+                  marginTop: 8,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-bold text-slate-800">
-                    #คำสั่งซื้อ {o.order_id}
-                  </span>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${
-                      STATUS_STYLE[o.order_status] ?? "bg-neutral-100 text-neutral-600"
-                    }`}
-                  >
-                    {o.order_status}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-neutral-500">
-                  {new Date(o.order_date).toLocaleDateString("th-TH")} ·{" "}
-                  {o.tb_order_detail.length} รายการ ·{" "}
-                  {o.tb_delivery[0]?.tracking_number
-                    ? `เลขพัสดุ ${o.tb_delivery[0].tracking_number}`
-                    : "ยังไม่มีเลขพัสดุ"}
-                </p>
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {o.tb_order_detail.slice(0, 4).map((d, idx) => (
-                      <span
-                        key={idx}
-                        className="grid h-9 w-7 place-items-center overflow-hidden rounded border border-white bg-neutral-100 text-sm"
-                      >
-                        {d.tb_book.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={d.tb_book.image}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          "📘"
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-lg font-extrabold text-[#f04e23]">
-                    ฿{fmt(Number(o.total_price))}
-                  </span>
-                </div>
-              </Link>
-            </li>
+                <span className="muted">
+                  {o.tb_payment[0] ? `สลิป: ${o.tb_payment[0].payment_status}` : "ยังไม่แจ้งชำระ"}
+                </span>
+                <b className="price">฿{fmt(Number(o.total_price))}</b>
+              </div>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

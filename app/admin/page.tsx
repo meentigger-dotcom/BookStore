@@ -4,16 +4,14 @@ import { getSessionAdmin } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { fmt } from "@/lib/book";
 
-export const metadata = { title: "ภาพรวม | CS&Book Admin" };
+export const metadata = { title: "ภาพรวม | CSbooks Admin" };
 
-const STATUS_STYLE: Record<string, string> = {
-  "รอชำระเงิน": "bg-amber-100 text-amber-800",
-  "รอตรวจสอบ": "bg-sky-100 text-sky-800",
-  "ชำระเงินแล้ว": "bg-emerald-100 text-emerald-800",
-  "กำลังจัดส่ง": "bg-indigo-100 text-indigo-800",
-  "จัดส่งสำเร็จ": "bg-green-100 text-green-800",
-  "ยกเลิก": "bg-neutral-200 text-neutral-600",
-};
+function statusBadge(s: string) {
+  if (s === "ยกเลิก") return "badge off";
+  if (s === "จัดส่งสำเร็จ") return "badge ok";
+  if (s === "กำลังจัดส่ง") return "badge info";
+  return "badge warn";
+}
 
 export default async function AdminDashboardPage() {
   const admin = await getSessionAdmin();
@@ -60,168 +58,154 @@ export default async function AdminDashboardPage() {
   ]);
 
   const revenue = Number(revenueAgg._sum.total_price ?? 0);
-  const cards = [
-    { label: "รายได้สะสม", value: `฿${fmt(revenue)}`, hint: "คำสั่งซื้อที่ชำระแล้ว" },
-    { label: "คำสั่งซื้อทั้งหมด", value: totalOrders, hint: "ทุกสถานะ" },
-    { label: "รอตรวจสอบสลิป", value: pendingPayments, hint: "ต้องตรวจด่วน", alert: pendingPayments > 0 },
-    { label: "ข้อความติดต่อใหม่", value: pendingMessages, hint: "รอตอบกลับ", alert: pendingMessages > 0 },
-    { label: "รอดำเนินการ", value: pendingOrders, hint: "รอชำระ/รอตรวจ" },
-    { label: "หนังสือในระบบ", value: totalBooks, hint: "รายการ" },
-    { label: "สมาชิก", value: totalCustomers, hint: "บัญชีที่ใช้งาน" },
-  ];
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-extrabold text-slate-900">
-        ภาพรวมร้านค้า
-      </h1>
-      <p className="mt-1 text-sm text-neutral-500">
+      <small className="eyebrow">DASHBOARD</small>
+      <h1>ภาพรวมร้านค้า</h1>
+      <p className="muted">
         สวัสดี {admin.cus_name} — ข้อมูลทั้งหมดดึงสดจากฐานข้อมูล
       </p>
 
-      {/* การ์ดสถิติ */}
-      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className={`rounded-xl border p-4 ${
-              c.alert ? "border-orange-300 bg-orange-50" : "border-neutral-200 bg-white"
-            }`}
-          >
-            <p className="text-xs font-semibold text-neutral-500">{c.label}</p>
-            <p
-              className={`mt-1 text-2xl font-extrabold ${
-                c.alert ? "text-[#f04e23]" : "text-slate-800"
-              }`}
-            >
-              {c.value}
-            </p>
-            <p className="mt-0.5 text-[11px] text-neutral-400">{c.hint}</p>
-          </div>
-        ))}
+      <div className="stats" style={{ marginTop: 20 }}>
+        <div>
+          <span>รายได้สะสม</span>
+          <b>฿{fmt(revenue)}</b>
+          <small className="muted">คำสั่งซื้อที่ชำระแล้ว</small>
+        </div>
+        <div>
+          <span>คำสั่งซื้อทั้งหมด</span>
+          <b>{totalOrders}</b>
+          <small className="muted">ทุกสถานะ</small>
+        </div>
+        <div>
+          <span>รอตรวจสอบสลิป</span>
+          <b>{pendingPayments}</b>
+          <small className="muted">ต้องตรวจด่วน</small>
+        </div>
+        <div>
+          <span>ข้อความติดต่อใหม่</span>
+          <b>{pendingMessages}</b>
+          <small className="muted">รอตอบกลับ</small>
+        </div>
+        <div>
+          <span>รอดำเนินการ</span>
+          <b>{pendingOrders}</b>
+          <small className="muted">รอชำระ / รอตรวจ</small>
+        </div>
+        <div>
+          <span>หนังสือในระบบ</span>
+          <b>{totalBooks}</b>
+          <small className="muted">รายการ</small>
+        </div>
+        <div>
+          <span>สมาชิก</span>
+          <b>{totalCustomers}</b>
+          <small className="muted">บัญชีที่ใช้งาน</small>
+        </div>
       </div>
 
-      {/* ทางลัด */}
-      <div className="mt-5 flex flex-wrap gap-3">
-        <Link href="/admin/payments" className="btn-chunky px-5 py-2.5 text-sm">
-          🧾 ตรวจสลิป ({pendingPayments})
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        <Link href="/admin/payments" className="btn small">
+          ตรวจสลิป ({pendingPayments})
         </Link>
-        <Link
-          href="/admin/orders"
-          className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
-        >
-          📦 คำสั่งซื้อทั้งหมด
+        <Link href="/admin/orders" className="btn outline small">
+          คำสั่งซื้อทั้งหมด
         </Link>
-        <Link
-          href="/admin/messages"
-          className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
-        >
-          💬 ข้อความติดต่อ
+        <Link href="/admin/messages" className="btn outline small">
+          ข้อความติดต่อ
         </Link>
-        <Link
-          href="/admin/books"
-          className="rounded-full border border-neutral-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
-        >
-          📚 จัดการหนังสือ
+        <Link href="/admin/books" className="btn outline small">
+          จัดการหนังสือ
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        {/* สถานะคำสั่งซื้อ */}
-        <section className="rounded-xl border border-neutral-200 bg-white p-4">
-          <h2 className="font-bold text-slate-700">คำสั่งซื้อตามสถานะ</h2>
-          <ul className="mt-3 space-y-2">
-            {statusGroups.length === 0 && (
-              <li className="text-sm text-neutral-400">ยังไม่มีคำสั่งซื้อ</li>
-            )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+        <section className="panel">
+          <h2 style={{ fontSize: 18 }}>คำสั่งซื้อตามสถานะ</h2>
+          <div style={{ marginTop: 10 }}>
+            {statusGroups.length === 0 && <p className="muted">ยังไม่มีคำสั่งซื้อ</p>}
             {statusGroups.map((g) => (
-              <li key={g.order_status} className="flex items-center justify-between text-sm">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
-                    STATUS_STYLE[g.order_status] ?? "bg-neutral-100 text-neutral-600"
-                  }`}
-                >
-                  {g.order_status}
-                </span>
-                <span className="font-bold">{g._count}</span>
-              </li>
+              <div
+                key={g.order_status}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "7px 0",
+                  borderBottom: "1px solid var(--line)",
+                  fontSize: 12,
+                }}
+              >
+                <span className={statusBadge(g.order_status)}>{g.order_status}</span>
+                <b>{g._count}</b>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
 
-        {/* สต็อกต่ำ */}
-        <section className="rounded-xl border border-neutral-200 bg-white p-4">
-          <h2 className="font-bold text-slate-700">⚠ สินค้าสต็อกต่ำ (≤5 เล่ม)</h2>
-          <ul className="mt-3 space-y-2">
-            {lowStock.length === 0 && (
-              <li className="text-sm text-neutral-400">ไม่มีสินค้าสต็อกต่ำ</li>
-            )}
+        <section className="panel">
+          <h2 style={{ fontSize: 18 }}>⚠ สินค้าสต็อกต่ำ (≤5 เล่ม)</h2>
+          <div style={{ marginTop: 10 }}>
+            {lowStock.length === 0 && <p className="muted">ไม่มีสินค้าสต็อกต่ำ</p>}
             {lowStock.map((b) => (
-              <li key={b.book_id} className="flex items-center justify-between gap-2 text-sm">
-                <Link
-                  href={`/admin/books?edit=${b.book_id}`}
-                  className="truncate hover:underline"
-                >
-                  {b.book_name}
-                </Link>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
-                    b.stock_quantity === 0
-                      ? "bg-red-100 text-red-700"
-                      : "bg-amber-100 text-amber-700"
-                  }`}
-                >
+              <div
+                key={b.book_id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "7px 0",
+                  borderBottom: "1px solid var(--line)",
+                  fontSize: 12,
+                }}
+              >
+                <Link href={`/admin/books?edit=${b.book_id}`}>{b.book_name}</Link>
+                <span className={b.stock_quantity === 0 ? "badge off" : "badge warn"}>
                   {b.stock_quantity} เล่ม
                 </span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
       </div>
 
-      {/* คำสั่งซื้อล่าสุด */}
-      <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-bold text-slate-700">คำสั่งซื้อล่าสุด</h2>
-          <Link href="/admin/orders" className="text-sm text-blue-600 hover:underline">
+      <section className="panel" style={{ marginTop: 15 }}>
+        <div className="section-head">
+          <h2 style={{ fontSize: 18 }}>คำสั่งซื้อล่าสุด</h2>
+          <Link className="text-link" href="/admin/orders">
             ดูทั้งหมด →
           </Link>
         </div>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="table-wrap">
+          <table>
             <thead>
-              <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500">
-                <th className="py-2 pr-3">#</th>
-                <th className="py-2 pr-3">ลูกค้า</th>
-                <th className="py-2 pr-3">ยอด</th>
-                <th className="py-2 pr-3">สถานะ</th>
+              <tr>
+                <th>#</th>
+                <th>ลูกค้า</th>
+                <th>ยอด</th>
+                <th>สถานะ</th>
               </tr>
             </thead>
             <tbody>
               {recentOrders.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-4 text-center text-neutral-400">
+                  <td colSpan={4} style={{ textAlign: "center", color: "#999" }}>
                     ยังไม่มีคำสั่งซื้อ
                   </td>
                 </tr>
               )}
               {recentOrders.map((o) => (
-                <tr key={o.order_id} className="border-b border-neutral-100 last:border-0">
-                  <td className="py-2 pr-3">
-                    <Link href={`/admin/orders/${o.order_id}`} className="font-bold text-blue-600 hover:underline">
+                <tr key={o.order_id}>
+                  <td>
+                    <Link href={`/admin/orders/${o.order_id}`} style={{ color: "var(--red)" }}>
                       {o.order_id}
                     </Link>
                   </td>
-                  <td className="py-2 pr-3">{o.tb_customer.cus_name}</td>
-                  <td className="py-2 pr-3 font-semibold">฿{fmt(Number(o.total_price))}</td>
-                  <td className="py-2 pr-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                        STATUS_STYLE[o.order_status] ?? "bg-neutral-100 text-neutral-600"
-                      }`}
-                    >
-                      {o.order_status}
-                    </span>
+                  <td>{o.tb_customer.cus_name}</td>
+                  <td>฿{fmt(Number(o.total_price))}</td>
+                  <td>
+                    <span className={statusBadge(o.order_status)}>{o.order_status}</span>
                   </td>
                 </tr>
               ))}

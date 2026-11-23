@@ -4,11 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { fmt } from "@/lib/book";
+import { coverFor } from "@/lib/covers";
 
 type Detail = {
   quantity: number;
   total_item_price: string | number;
-  tb_book: { book_id: number; book_name: string; image: string | null; author: string | null };
+  tb_book: {
+    book_id: number;
+    book_name: string;
+    image: string | null;
+    author: string | null;
+  };
 };
 
 type Order = {
@@ -16,7 +22,6 @@ type Order = {
   total_price: string | number;
   order_status: string;
   order_date: string;
-  cus_id: number;
   tb_customer: { cus_name: string; email: string; phone: string };
   tb_address: { address_detail: string; receiver_phone: string };
   tb_order_detail: Detail[];
@@ -40,14 +45,12 @@ type Order = {
 
 const STEPS = ["รอชำระเงิน", "รอตรวจสอบ", "ชำระเงินแล้ว", "กำลังจัดส่ง", "จัดส่งสำเร็จ"];
 
-const STATUS_STYLE: Record<string, string> = {
-  "รอชำระเงิน": "bg-amber-100 text-amber-800",
-  "รอตรวจสอบ": "bg-sky-100 text-sky-800",
-  "ชำระเงินแล้ว": "bg-emerald-100 text-emerald-800",
-  "กำลังจัดส่ง": "bg-indigo-100 text-indigo-800",
-  "จัดส่งสำเร็จ": "bg-green-100 text-green-800",
-  "ยกเลิก": "bg-neutral-200 text-neutral-600",
-};
+function statusClass(s: string) {
+  if (s === "ยกเลิก") return "badge off";
+  if (s === "จัดส่งสำเร็จ") return "badge ok";
+  if (s === "กำลังจัดส่ง") return "badge info";
+  return "badge warn";
+}
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -58,7 +61,6 @@ export default function OrderDetailPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // ฟอร์มสลิป
   const [file, setFile] = useState<File | null>(null);
   const [method, setMethod] = useState("โอนเงิน");
   const [ref, setRef] = useState("");
@@ -128,24 +130,19 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center text-neutral-500">
-          กำลังโหลดคำสั่งซื้อ...
-        </div>
+      <div className="wrap page-section">
+        <p className="empty">กำลังโหลดคำสั่งซื้อ...</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-          <p className="text-5xl">🔍</p>
-          <p className="mt-3 font-semibold text-slate-700">{error || "ไม่พบคำสั่งซื้อ"}</p>
-          <Link
-            href="/orders"
-            className="mt-5 inline-block rounded-full bg-blue-600 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
+      <div className="wrap page-section">
+        <div className="empty">
+          <p style={{ fontSize: 34 }}>🔍</p>
+          <p style={{ marginTop: 8 }}>{error || "ไม่พบคำสั่งซื้อ"}</p>
+          <Link className="btn small" href="/orders" style={{ marginTop: 15 }}>
             กลับไปหน้าประวัติ
           </Link>
         </div>
@@ -158,42 +155,36 @@ export default function OrderDetailPage() {
   const delivery = order.tb_delivery[0];
   const showPayForm =
     order.order_status === "รอชำระเงิน" || order.order_status === "รอตรวจสอบ";
-
   const stepIndex =
     order.order_status === "ยกเลิก"
       ? -1
       : STEPS.indexOf(
-          order.order_status === "รอตรวจสอบ"
-            ? "รอชำระเงิน"
-            : order.order_status
+          order.order_status === "รอตรวจสอบ" ? "รอชำระเงิน" : order.order_status
         );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="section-title font-display text-3xl">
-          คำสั่งซื้อ #{order.order_id}
-        </h1>
-        <span
-          className={`rounded-full px-4 py-1.5 text-sm font-bold ${
-            STATUS_STYLE[order.order_status] ?? "bg-neutral-100 text-neutral-600"
-          }`}
-        >
-          {order.order_status}
-        </span>
+    <div className="wrap page-section">
+      <nav className="breadcrumb">
+        <Link href="/">หน้าแรก</Link>
+        <span> / </span>
+        <Link href="/orders">คำสั่งซื้อของฉัน</Link>
+        <span> / </span>
+        <span>#{order.order_id}</span>
+      </nav>
+
+      <div className="section-head" style={{ marginTop: 14 }}>
+        <div>
+          <small className="eyebrow">ORDER #{order.order_id}</small>
+          <h1 style={{ fontSize: 30, margin: "8px 0" }}>คำสั่งซื้อ #{order.order_id}</h1>
+          <p className="muted">
+            สั่งเมื่อ {new Date(order.order_date).toLocaleString("th-TH")}
+          </p>
+        </div>
+        <span className={statusClass(order.order_status)}>{order.order_status}</span>
       </div>
-      <p className="mt-1 text-sm text-neutral-500">
-        สั่งเมื่อ {new Date(order.order_date).toLocaleString("th-TH")}
-      </p>
 
       {msg && (
-        <p
-          className={`mt-4 rounded-lg px-4 py-3 text-sm ${
-            msgType === "ok"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-red-50 text-red-700"
-          }`}
-        >
+        <p className={`notice ${msgType === "ok" ? "ok" : "error"}`}>
           {msgType === "ok" ? "✓ " : "⚠ "}
           {msg}
         </p>
@@ -201,201 +192,170 @@ export default function OrderDetailPage() {
 
       {/* แถบสถานะ */}
       {order.order_status !== "ยกเลิก" && (
-        <ol className="mt-6 flex flex-wrap gap-x-2 gap-y-3">
-          {STEPS.map((s, i) => {
-            const done = i <= stepIndex;
-            return (
-              <li key={s} className="flex items-center gap-2">
-                <span
-                  className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${
-                    done ? "bg-[#f04e23] text-white" : "bg-neutral-200 text-neutral-500"
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <span
-                  className={`text-xs ${done ? "font-bold text-slate-700" : "text-neutral-400"}`}
-                >
-                  {s}
-                </span>
-                {i < STEPS.length - 1 && <span className="text-neutral-300">→</span>}
-              </li>
-            );
-          })}
-        </ol>
+        <div className="chips" style={{ justifyContent: "flex-start", marginTop: 10 }}>
+          {STEPS.map((s, i) => (
+            <span
+              key={s}
+              className={i <= stepIndex ? "badge ok" : "badge"}
+              style={{ borderRadius: 20 }}
+            >
+              {i + 1}. {s}
+            </span>
+          ))}
+        </div>
       )}
 
-      {/* สินค้า */}
-      <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-4">
-        <h2 className="font-bold text-slate-700">รายการสินค้า</h2>
-        <ul className="mt-3 divide-y divide-neutral-100">
-          {order.tb_order_detail.map((d) => (
-            <li key={d.tb_book.book_id} className="flex items-center gap-3 py-3">
-              <div className="h-16 w-12 shrink-0 overflow-hidden rounded bg-neutral-100">
-                {d.tb_book.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={d.tb_book.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="grid h-full place-items-center">📘</div>
+      <div className="cart-layout">
+        <div>
+          <section className="panel">
+            <h2 style={{ fontSize: 18 }}>รายการสินค้า</h2>
+            <div style={{ marginTop: 8 }}>
+              {order.tb_order_detail.map((d) => (
+                <div key={d.tb_book.book_id} className="order-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={d.tb_book.image || coverFor(d.tb_book.book_id)} alt="" />
+                  <div style={{ flex: 1 }}>
+                    <b style={{ fontSize: 12 }}>
+                      <Link href={`/books/${d.tb_book.book_id}`}>{d.tb_book.book_name}</Link>
+                    </b>
+                    <p className="muted">
+                      {d.tb_book.author} · x{d.quantity}
+                    </p>
+                  </div>
+                  <b style={{ fontSize: 12 }}>฿{fmt(Number(d.total_item_price))}</b>
+                </div>
+              ))}
+            </div>
+            <div className="summary-line total" style={{ marginTop: 12 }}>
+              <span>ยอดชำระทั้งหมด</span>
+              <span style={{ color: "var(--red)" }}>฿{fmt(total)}</span>
+            </div>
+          </section>
+
+          <section className="panel" style={{ marginTop: 15 }}>
+            <h2 style={{ fontSize: 18 }}>ที่อยู่จัดส่ง (ตามวันสั่งซื้อ)</h2>
+            <p style={{ fontSize: 12, marginTop: 8, lineHeight: 1.8 }}>
+              {order.tb_address.address_detail}
+            </p>
+            <p className="muted" style={{ marginTop: 4 }}>
+              ผู้รับ: {order.tb_customer.cus_name} · โทร {order.tb_address.receiver_phone}
+            </p>
+          </section>
+
+          <section className="panel" style={{ marginTop: 15 }}>
+            <h2 style={{ fontSize: 18 }}>การชำระเงิน</h2>
+            {lastPayment ? (
+              <div style={{ marginTop: 8 }}>
+                <p style={{ fontSize: 12 }}>
+                  สถานะสลิป:{" "}
+                  <b
+                    style={{
+                      color:
+                        lastPayment.payment_status === "ยืนยันแล้ว"
+                          ? "var(--green)"
+                          : lastPayment.payment_status === "ไม่ผ่าน"
+                            ? "var(--red)"
+                            : "#2f5480",
+                    }}
+                  >
+                    {lastPayment.payment_status}
+                  </b>
+                </p>
+                {lastPayment.verified_by && (
+                  <p className="muted" style={{ marginTop: 4 }}>
+                    ตรวจโดย {lastPayment.verified_by}
+                  </p>
+                )}
+                {lastPayment.slip_image && (
+                  <a href={lastPayment.slip_image} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={lastPayment.slip_image}
+                      alt="สลิปการโอนเงิน"
+                      style={{
+                        marginTop: 10,
+                        height: 180,
+                        border: "1px solid var(--line)",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </a>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <Link
-                  href={`/books/${d.tb_book.book_id}`}
-                  className="line-clamp-1 text-sm font-semibold hover:underline"
-                >
-                  {d.tb_book.book_name}
-                </Link>
-                <p className="text-xs text-neutral-500">
-                  {d.tb_book.author} · x{d.quantity}
-                </p>
-              </div>
-              <span className="text-sm font-bold">฿{fmt(Number(d.total_item_price))}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="flex justify-between border-t border-neutral-200 pt-3">
-          <span className="font-bold">ยอดชำระทั้งหมด</span>
-          <span className="text-xl font-extrabold text-[#f04e23]">฿{fmt(total)}</span>
-        </div>
-      </section>
-
-      {/* ที่อยู่ */}
-      <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4 text-sm">
-        <h2 className="font-bold text-slate-700">ที่อยู่จัดส่ง (ตามวันสั่งซื้อ)</h2>
-        <p className="mt-2 leading-relaxed text-neutral-600">
-          {order.tb_address.address_detail}
-        </p>
-        <p className="mt-1 text-xs text-neutral-500">
-          ผู้รับ: {order.tb_customer.cus_name} · โทร {order.tb_address.receiver_phone}
-        </p>
-      </section>
-
-      {/* การชำระเงิน */}
-      <section className="mt-4 rounded-xl border border-neutral-200 bg-white p-4">
-        <h2 className="font-bold text-slate-700">การชำระเงิน</h2>
-        {lastPayment ? (
-          <div className="mt-2 space-y-2 text-sm">
-            <p>
-              สถานะ:{" "}
-              <span
-                className={`font-bold ${
-                  lastPayment.payment_status === "ยืนยันแล้ว"
-                    ? "text-emerald-600"
-                    : lastPayment.payment_status === "ไม่ผ่าน"
-                      ? "text-red-600"
-                      : "text-sky-600"
-                }`}
-              >
-                {lastPayment.payment_status}
-              </span>
-            </p>
-            {lastPayment.verified_by && (
-              <p className="text-xs text-neutral-500">
-                ตรวจโดย {lastPayment.verified_by} ·{" "}
-                {lastPayment.verified_date
-                  ? new Date(lastPayment.verified_date).toLocaleString("th-TH")
-                  : ""}
+            ) : (
+              <p className="muted" style={{ marginTop: 8 }}>
+                ยังไม่มีการแจ้งชำระเงิน
               </p>
             )}
-            {lastPayment.slip_image && (
-              <a href={lastPayment.slip_image} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={lastPayment.slip_image}
-                  alt="สลิปการโอนเงิน"
-                  className="h-40 rounded-lg border border-neutral-200 object-contain"
-                />
-              </a>
+
+            {showPayForm && (
+              <form onSubmit={submitSlip} style={{ marginTop: 15 }}>
+                <p className="notice">
+                  โอนเงินครบตามยอด <b>฿{fmt(total)}</b> แล้วแนบรูปสลิปที่นี่ —
+                  แอดมินจะตรวจสอบภายใน 1 วันทำการ
+                </p>
+                <label>
+                  วิธีชำระเงิน
+                  <select value={method} onChange={(e) => setMethod(e.target.value)}>
+                    <option>โอนเงิน</option>
+                    <option>โอนผ่านพร้อมเพย์</option>
+                  </select>
+                </label>
+                <label>
+                  เลขอ้างอิงการโอน (ถ้ามี)
+                  <input value={ref} onChange={(e) => setRef(e.target.value)} />
+                </label>
+                <label>
+                  แนบสลิป (jpg / png / webp ไม่เกิน 5 MB)
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <button type="submit" disabled={sending} className="btn full">
+                  {sending ? "กำลังส่งสลิป..." : "ส่งสลิปการชำระเงิน"}
+                </button>
+              </form>
             )}
+          </section>
+        </div>
+
+        <aside className="summary">
+          <h2>ติดตามสถานะ</h2>
+          <div className="summary-line">
+            <span>สถานะคำสั่งซื้อ</span>
+            <span className={statusClass(order.order_status)}>{order.order_status}</span>
           </div>
-        ) : (
-          <p className="mt-2 text-sm text-neutral-500">ยังไม่มีการแจ้งชำระเงิน</p>
-        )}
-
-        {showPayForm && (
-          <form onSubmit={submitSlip} className="mt-4 space-y-3 border-t border-neutral-100 pt-4">
-            <p className="text-xs leading-relaxed text-neutral-600">
-              โอนเงินครบตามยอด <b>฿{fmt(total)}</b> แล้วแนบรูปสลิปที่นี่ —
-              แอดมินจะตรวจสอบภายใน 1 วันทำการ
-            </p>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <label className="flex items-center gap-1.5">
-                <input
-                  type="radio"
-                  checked={method === "โอนเงิน"}
-                  onChange={() => setMethod("โอนเงิน")}
-                />
-                โอนเงิน
-              </label>
-              <label className="flex items-center gap-1.5">
-                <input
-                  type="radio"
-                  checked={method === "โอนผ่านพร้อมเพย์"}
-                  onChange={() => setMethod("โอนผ่านพร้อมเพย์")}
-                />
-                พร้อมเพย์
-              </label>
-            </div>
-            <input
-              value={ref}
-              onChange={(e) => setRef(e.target.value)}
-              placeholder="เลขอ้างอิงการโอน (ถ้ามี)"
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-[#f04e23]"
-            />
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm"
-            />
-            <button
-              type="submit"
-              disabled={sending}
-              className="btn-chunky w-full py-2.5 disabled:opacity-50"
-            >
-              {sending ? "กำลังส่งสลิป..." : "ส่งสลิปการชำระเงิน"}
-            </button>
-          </form>
-        )}
-        {order.order_status === "ยกเลิก" && (
-          <p className="mt-2 text-sm text-neutral-500">คำสั่งซื้อนี้ถูกยกเลิก</p>
-        )}
-      </section>
-
-      {/* พัสดุ */}
-      {delivery && (delivery.tracking_number || delivery.parcel_status) && (
-        <section className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm">
-          <h2 className="font-bold text-indigo-900">ติดตามพัสดุ</h2>
-          <p className="mt-2 text-indigo-900">
-            {delivery.shipping_company} · เลขพัสดุ{" "}
-            <b>{delivery.tracking_number ?? "-"}</b>
-          </p>
-          <p className="text-xs text-indigo-700">สถานะ: {delivery.parcel_status}</p>
-          {delivery.delivery_date && (
-            <p className="mt-1 text-xs text-indigo-600">
-              อัปเดตล่าสุด {new Date(delivery.delivery_date).toLocaleString("th-TH")}
-            </p>
+          {delivery ? (
+            <>
+              <div className="summary-line">
+                <span>ขนส่ง</span>
+                <span>{delivery.shipping_company}</span>
+              </div>
+              <div className="summary-line">
+                <span>เลขพัสดุ</span>
+                <b>{delivery.tracking_number ?? "-"}</b>
+              </div>
+              <div className="summary-line">
+                <span>สถานะพัสดุ</span>
+                <span>{delivery.parcel_status}</span>
+              </div>
+            </>
+          ) : (
+            <p className="hint">ยังไม่มีข้อมูลพัสดุ — จะแสดงเมื่อร้านจัดส่ง</p>
           )}
-        </section>
-      )}
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Link
-          href="/orders"
-          className="rounded-full border border-neutral-300 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
-        >
-          ← กลับหน้าประวัติ
-        </Link>
-        <Link
-          href="/track"
-          className="rounded-full border border-neutral-300 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-neutral-100"
-        >
-          เช็คพัสดุ
-        </Link>
-        <Link href="/books" className="btn-chunky px-6 py-2.5 text-sm">
-          สั่งซื้อเพิ่ม
-        </Link>
+          <Link className="button-link" href="/track" style={{ marginTop: 12 }}>
+            เช็คพัสดุ
+          </Link>
+          <Link className="button-link" href="/orders" style={{ marginTop: 8 }}>
+            กลับหน้าประวัติ
+          </Link>
+          <Link className="btn full" href="/books" style={{ marginTop: 8 }}>
+            สั่งซื้อเพิ่ม
+          </Link>
+        </aside>
       </div>
     </div>
   );

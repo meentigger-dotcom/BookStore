@@ -1,71 +1,17 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #1f2937;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-noto-sans-thai), "Noto Sans Thai", system-ui, sans-serif;
-  --font-display: var(--font-kanit), "Kanit", system-ui, sans-serif;
-}
+@import "./csbooks.css";
 
 html {
   scroll-behavior: smooth;
 }
 
+/* ให้ Tailwind ไม่ทับฟอนต์/สีของธีม CSbooks */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-prompt), Prompt, sans-serif;
+  color: var(--dark);
+  background: #fff;
 }
 
-/* ===== องค์ประกอบตามดีไซน์ CS&Book ===== */
-
-/* ปุ่มสไตล์เหลืองมุมมน (หมวดหมู่ / ปุ่มบัญชีผู้ใช้) */
-.btn-chunky {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: #ffd84d;
-  color: #7b21a8;
-  font-family: var(--font-display);
-  font-weight: 800;
-  border: 2px solid #111;
-  border-radius: 1.25rem;
-  box-shadow: 0 6px 0 0 #ef9834;
-  padding: 0.7rem 1.6rem;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-.btn-chunky:hover {
-  transform: translateY(3px);
-  box-shadow: 0 3px 0 0 #ef9834;
-}
-.btn-chunky:active {
-  transform: translateY(6px);
-  box-shadow: 0 0 0 0 #ef9834;
-}
-
-/* หัวข้อ section สีน้ำเงิน */
-.section-title {
-  color: #1565d8;
-  font-weight: 800;
-}
-
-/* ราคาสีน้ำเงิน */
-.price-tag {
-  color: #1565d8;
-  font-weight: 800;
-}
-
-/* แถบเลื่อนแนวนอนสำหรับแถวหนังสือ */
-.row-scroll {
-  display: flex;
-  gap: 0.875rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  scrollbar-width: thin;
+.font-display {
+  font-family: var(--font-kanit), Kanit, sans-serif;
 }

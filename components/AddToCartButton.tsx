@@ -1,25 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addToCart } from "@/lib/cart";
 
 export default function AddToCartButton({
   bookId,
   stock,
+  compact = false,
 }: {
   bookId: number;
   stock: number;
+  compact?: boolean;
 }) {
   const [added, setAdded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
   if (stock <= 0) {
     return (
-      <button
-        type="button"
-        disabled
-        className="btn-chunky px-6 py-3 text-base opacity-50"
-      >
+      <button type="button" className={compact ? "add-cart" : "btn"} disabled>
         สินค้าหมด
       </button>
     );
@@ -36,9 +40,9 @@ export default function AddToCartButton({
     <button
       type="button"
       onClick={handleAdd}
-      className="btn-chunky px-6 py-3 text-base"
+      className={compact ? "add-cart" : "btn"}
     >
-      {added ? "✓ เพิ่มลงตะกร้าแล้ว" : "🛒 เพิ่มลงตะกร้า"}
+      {added ? "✓ เพิ่มแล้ว" : "+ ใส่ตะกร้า"}
     </button>
   );
 }
