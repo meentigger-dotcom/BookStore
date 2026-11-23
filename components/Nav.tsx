@@ -3,14 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
+const baseLinks = [
   { href: "/", label: "หน้าแรก" },
   { href: "/promotions", label: "โปรโมชั่น" },
   { href: "/contact", label: "ติดต่อเรา" },
 ];
 
-export default function Nav() {
+export default function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+
+  const links = isAdmin
+    ? [...baseLinks, { href: "/admin", label: "แผงควบคุม" }]
+    : baseLinks;
 
   return (
     <nav className="mx-auto flex w-fit items-center gap-1 rounded-full border-2 border-black bg-[#f9b99b] px-3 py-1.5 shadow-sm">
@@ -24,7 +28,8 @@ export default function Nav() {
         🏠
       </Link>
       {links.map((l) => {
-        const active = pathname === l.href;
+        const active =
+          l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
         return (
           <Link
             key={l.href}

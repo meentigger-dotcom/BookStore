@@ -1,25 +1,18 @@
 import Link from "next/link";
 import Nav from "./Nav";
 import CartBadge from "./CartBadge";
-import prisma from "@/lib/prisma";
-import { getCusId } from "@/lib/auth";
-
-async function getUserName(): Promise<string | null> {
-  try {
-    const cusId = await getCusId();
-    if (!cusId) return null;
-    const cus = await prisma.tb_customer.findUnique({
-      where: { cus_id: cusId },
-      select: { cus_name: true },
-    });
-    return cus?.cus_name ?? null;
-  } catch {
-    return null;
-  }
-}
+import { getSessionUser } from "@/lib/auth";
 
 export default async function Header() {
-  const userName = await getUserName();
+  let userName: string | null = null;
+  let isAdmin = false;
+  try {
+    const user = await getSessionUser();
+    userName = user?.cus_name ?? null;
+    isAdmin = user?.member_type === "แอดมิน";
+  } catch {
+    // ฐานข้อมูลไม่พร้อม — แสดง header แบบผู้เยี่ยมชม
+  }
 
   return (
     <header className="w-full bg-[linear-gradient(180deg,#dab9af_0%,#c9a094_100%)]">
@@ -83,7 +76,7 @@ export default async function Header() {
 
       {/* แถบเมนูสีพีช */}
       <div className="mx-auto max-w-6xl px-4 pb-4 pt-3">
-        <Nav />
+        <Nav isAdmin={isAdmin} />
       </div>
     </header>
   );
