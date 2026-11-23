@@ -34,6 +34,7 @@ export async function PATCH(
 
     const payment = await prisma.tb_payment.findUnique({
       where: { payment_id: paymentId },
+      include: { tb_order: { select: { total_price: true } } },
     });
     if (!payment) {
       return NextResponse.json({ error: "ไม่พบสลิป" }, { status: 404 });
@@ -43,6 +44,23 @@ export async function PATCH(
         { error: "สลิปนี้ถูกยืนยันแล้ว" },
         { status: 409 }
       );
+    }
+
+    // กันอนุมัติสลิปที่ยอดไม่ตรงกับคำสั่งซื้อ
+    if (action === "approve") {
+      const expected = Number(payment.tb_order.total_price);
+      if (Math.abs(Number(payment.amount) - expected) > 0.01) {
+        return NextResponse.json(
+          {
+            error: `ยอดในสลิป (฿${Number(payment.amount).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}) ไม่ตรงกับคำสั่งซื้อ (฿${expected.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}) — กรุณาปฏิเสธสลิปและให้ลูกค้าส่งใหม่`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     await prisma.$transaction(async (tx) => {

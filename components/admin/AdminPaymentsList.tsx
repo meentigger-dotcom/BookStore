@@ -154,6 +154,11 @@ export default function AdminPaymentsList() {
 
               <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-neutral-600">
                 <span className="font-bold text-[#f04e23]">฿{fmt(Number(p.amount))}</span>
+                {Math.abs(Number(p.amount) - Number(p.tb_order.total_price)) > 0.01 && (
+                  <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
+                    ⚠ ยอดไม่ตรง (ต้อง ฿{fmt(Number(p.tb_order.total_price))})
+                  </span>
+                )}
                 <span>{p.payment_method}</span>
                 <span>อ้างอิง: {p.transfer_ref ?? "-"}</span>
                 {p.paid_date && (

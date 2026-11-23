@@ -311,6 +311,11 @@ export default function AdminOrderDetail({ orderId }: { orderId: number }) {
                     {p.payment_status}
                   </span>
                 </div>
+                {Math.abs(Number(p.amount) - total) > 0.01 && (
+                  <p className="mt-1 rounded bg-red-50 px-2 py-1 text-xs font-bold text-red-700">
+                    ⚠ ยอดสลิปไม่ตรงกับคำสั่งซื้อ (ต้อง ฿{fmt(total)})
+                  </p>
+                )}
                 {p.paid_date && (
                   <p className="mt-1 text-xs text-neutral-500">
                     แจ้งชำระ {new Date(p.paid_date).toLocaleString("th-TH")}

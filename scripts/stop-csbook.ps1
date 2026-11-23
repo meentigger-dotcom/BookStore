@@ -24,9 +24,21 @@ if (-not $stopped) { Write-Host "เว็บเซิร์ฟเวอร์�
 if (-not $KeepMysql) {
   $mysql = Get-Process mysqld -ErrorAction SilentlyContinue
   if ($mysql) {
-    foreach ($m in $mysql) {
-      Stop-Process -Id $m.Id -Force
-      Write-Host "หยุด MySQL (PID $($m.Id))"
+    # ปิด MySQL แบบ graceful (สำคัญ! การ force-kill ทำให้ system table เสีย)
+    $mysqlAdmin = "C:\xampp\mysql\bin\mysqladmin.exe"
+    if (Test-Path $mysqlAdmin) {
+      & $mysqlAdmin --user=root shutdown 2>$null
+      for ($i = 0; $i -lt 15; $i++) {
+        if (-not (Get-Process mysqld -ErrorAction SilentlyContinue)) { break }
+        Start-Sleep -Seconds 1
+      }
+    }
+    $still = Get-Process mysqld -ErrorAction SilentlyContinue
+    if ($still) {
+      Write-Host "MySQL ไม่ยอมปิดตามปกติ — กำลังบังคับปิด (ควรเลี่ยง)"
+      $still | ForEach-Object { Stop-Process -Id $_.Id -Force }
+    } else {
+      Write-Host "หยุด MySQL เรียบร้อย (graceful shutdown)"
     }
   } else {
     Write-Host "MySQL ไม่ได้เปิดอยู่"

@@ -67,6 +67,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // ยอดเงินต้องตรงกับคำสั่งซื้อ (กันกรอกผิด/แนบสลิปผิดใบ)
+    const expected = Number(order.total_price);
+    if (Math.abs(amount - expected) > 0.01) {
+      return NextResponse.json(
+        {
+          error: `ยอดเงินไม่ตรงกับคำสั่งซื้อ — ต้องชำระ ฿${expected.toLocaleString(
+            "en-US",
+            { minimumFractionDigits: 2 }
+          )}`,
+        },
+        { status: 400 }
+      );
+    }
+
     // บันทึกลง public/uploads/slips/
     const ext =
       slip.type === "image/png"
