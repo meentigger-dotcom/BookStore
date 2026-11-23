@@ -21,11 +21,11 @@ export default async function AdminLayout({
   return (
     <div>
       <div className="admin-top">
-        <Link className="logo" href="/admin">
-          <b>C</b>
-          <span>
-            CS<strong>books</strong>
-            <small>ADMIN PANEL</small>
+        <Link className="logo" href="/admin" aria-label="CSbooks Admin">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png" alt="CSbooks" />
+          <span style={{ fontSize: 11, color: "#999", letterSpacing: 1 }}>
+            ADMIN PANEL
           </span>
         </Link>
         <div>

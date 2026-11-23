@@ -92,6 +92,28 @@ textarea {
   margin-top: 5px;
 }
 
+.logo img {
+  height: 60px;
+  width: auto;
+  display: block;
+}
+
+.authhead .logo img {
+  height: 54px;
+}
+
+.admin-top .logo img {
+  height: 42px;
+}
+
+.footlogo img {
+  height: 68px;
+  width: auto;
+  background: #fff;
+  padding: 6px;
+  border-radius: 8px;
+}
+
 .actions {
   display: flex;
   gap: 17px;
@@ -1455,6 +1477,12 @@ td img {
 }
 
 @media (max-width: 600px) {
+  .logo img {
+    height: 48px;
+  }
+  .authhead .logo img {
+    height: 46px;
+  }
   .hero {
     grid-template-columns: 1fr;
     padding-top: 35px;

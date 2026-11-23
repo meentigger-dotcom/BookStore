@@ -21,12 +21,9 @@ export default async function Header() {
       </div>
 
       <header className="site-header wrap">
-        <Link className="logo" href="/">
-          <b>C</b>
-          <span>
-            CS<strong>books</strong>
-            <small>BOOKS FOR EVERY STORY</small>
-          </span>
+        <Link className="logo" href="/" aria-label="CSbooks หน้าแรก">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logo.png" alt="CSbooks" />
         </Link>
 
         <form action="/books" className="search">
