@@ -17,7 +17,7 @@ export default async function BooksPage({
     ...(Number.isInteger(categoryId) ? { category_id: categoryId } : {}),
   };
 
-  const [books, categories] = await Promise.all([
+  const [books, categories, counts] = await Promise.all([
     prisma.tb_book
       .findMany({
         where,
@@ -32,7 +32,14 @@ export default async function BooksPage({
     prisma.tb_category
       .findMany({ orderBy: { category_id: "asc" } })
       .catch(() => []),
+    prisma.tb_book
+      .groupBy({ by: ["category_id"], _count: true })
+      .catch(() => []),
   ]);
+
+  const countOf = (id: number) =>
+    counts.find((c) => c.category_id === id)?._count ?? 0;
+  const totalCount = counts.reduce((s, c) => s + c._count, 0);
 
   const activeCategory = Number.isInteger(categoryId)
     ? categories.find((c) => c.category_id === categoryId)
@@ -74,43 +81,51 @@ export default async function BooksPage({
         </form>
       </div>
 
-      {/* ตัวกรองหมวดหมู่ */}
-      <div className="chips">
-        <Link href="/books" className={!activeCategory && !q ? "selected" : ""}>
-          ทั้งหมด
-        </Link>
-        {categories.map((c) => (
+      <div className="shop-layout">
+        {/* แท็บหมวดหมู่ด้านซ้าย */}
+        <aside className="side-cats">
+          <h3>หมวดหมู่หนังสือ</h3>
           <Link
-            key={c.category_id}
-            href={`/books?category=${c.category_id}`}
-            className={
-              activeCategory?.category_id === c.category_id ? "selected" : ""
-            }
+            href="/books"
+            className={!activeCategory ? "active" : ""}
           >
-            {c.category_name}
+            ทั้งหมด <span className="count">{totalCount}</span>
           </Link>
-        ))}
-      </div>
-
-      {/* รายการสินค้า */}
-      {books.length > 0 ? (
-        <div className="grid" style={{ marginTop: 25 }}>
-          {books.map((b) => (
-            <BookCard key={b.book_id} book={b} />
+          {categories.map((c) => (
+            <Link
+              key={c.category_id}
+              href={`/books?category=${c.category_id}`}
+              className={
+                activeCategory?.category_id === c.category_id ? "active" : ""
+              }
+            >
+              {c.category_name} <span className="count">{countOf(c.category_id)}</span>
+            </Link>
           ))}
+        </aside>
+
+        {/* รายการสินค้า */}
+        <div className="shop-main">
+          {books.length > 0 ? (
+            <div className="grid">
+              {books.map((b) => (
+                <BookCard key={b.book_id} book={b} />
+              ))}
+            </div>
+          ) : (
+            <div className="empty">
+              <p style={{ fontSize: 30 }}>🔍</p>
+              <p style={{ marginTop: 8 }}>ไม่พบหนังสือที่ค้นหา</p>
+              <p style={{ marginTop: 4 }}>
+                ลองค้นหาด้วยคำอื่น หรือเลือกหมวดหมู่ใหม่
+              </p>
+              <Link className="btn small" href="/books" style={{ marginTop: 15 }}>
+                ดูหนังสือทั้งหมด
+              </Link>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="empty">
-          <p style={{ fontSize: 30 }}>🔍</p>
-          <p style={{ marginTop: 8 }}>ไม่พบหนังสือที่ค้นหา</p>
-          <p style={{ marginTop: 4 }}>
-            ลองค้นหาด้วยคำอื่น หรือเลือกหมวดหมู่ใหม่
-          </p>
-          <Link className="btn small" href="/books" style={{ marginTop: 15 }}>
-            ดูหนังสือทั้งหมด
-          </Link>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

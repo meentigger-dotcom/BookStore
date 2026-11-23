@@ -23,7 +23,7 @@ export default function Footer() {
           <h3>เมนูนำทางลัด</h3>
           <Link href="/">หน้าแรก</Link>
           <Link href="/books">หนังสือทั้งหมด</Link>
-          <Link href="/#categories">หมวดหมู่หนังสือ</Link>
+          <Link href="/books">หมวดหมู่หนังสือ</Link>
           <Link href="/promotions">โปรโมชั่น</Link>
         </div>
 

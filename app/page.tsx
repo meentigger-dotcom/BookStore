@@ -21,7 +21,7 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 export default async function Home() {
   await connection();
 
-  const [recommended, newest, categories] = await Promise.all([
+  const [recommended, newest] = await Promise.all([
     safe(
       () =>
         prisma.tb_book.findMany({
@@ -38,10 +38,6 @@ export default async function Home() {
           orderBy: { book_id: "desc" },
           take: 4,
         }),
-      []
-    ),
-    safe(
-      () => prisma.tb_category.findMany({ orderBy: { category_id: "asc" } }),
       []
     ),
   ]);
@@ -90,23 +86,6 @@ export default async function Home() {
             <b>สั่งซื้อสะดวก</b>
             <small>ตรวจสอบรายการสั่งซื้อได้</small>
           </span>
-        </div>
-      </section>
-
-      {/* ===== หมวดหมู่ ===== */}
-      <section className="wrap section" id="categories">
-        <small className="eyebrow">FIND YOUR GENRE</small>
-        <h2>เลือกหนังสือตามหมวดหมู่</h2>
-        <p className="muted">เลือกหมวดที่สนใจเพื่อดูหนังสือที่ตรงกับสไตล์ของคุณ</p>
-        <div className="chips">
-          <Link href="/books" className="selected">
-            ทั้งหมด
-          </Link>
-          {categories.map((c) => (
-            <Link key={c.category_id} href={`/books?category=${c.category_id}`}>
-              {c.category_name}
-            </Link>
-          ))}
         </div>
       </section>
 

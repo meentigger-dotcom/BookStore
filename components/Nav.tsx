@@ -8,7 +8,6 @@ type NavLink = { href: string; label: string; match?: string; query?: string };
 const baseLinks: NavLink[] = [
   { href: "/", label: "หน้าแรก" },
   { href: "/books", label: "หนังสือทั้งหมด" },
-  { href: "/#categories", label: "หมวดหมู่" },
   { href: "/promotions", label: "โปรโมชั่น" },
   { href: "/books?sort=new", label: "หนังสือมาใหม่", match: "/books", query: "sort=new" },
   { href: "/contact", label: "ติดต่อเรา" },

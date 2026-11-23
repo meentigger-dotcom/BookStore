@@ -1312,6 +1312,86 @@ td img {
   margin-top: 25px;
 }
 
+/* ---------- หน้าหนังสือทั้งหมด: แท็บหมวดหมู่ด้านซ้าย ---------- */
+.shop-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: start;
+  margin-top: 22px;
+}
+
+.side-cats {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 10px;
+}
+
+.side-cats h3 {
+  font-size: 13px;
+  padding: 4px 10px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+
+.side-cats a {
+  display: block;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #514b4d;
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+  transition: 0.15s;
+}
+
+.side-cats a:hover {
+  background: #faf7f4;
+  color: var(--red);
+}
+
+.side-cats a.active {
+  background: #fdf6f3;
+  color: var(--red);
+  border-left-color: var(--red);
+  font-weight: 600;
+}
+
+.side-cats .count {
+  float: right;
+  color: #aaa;
+  font-size: 10px;
+}
+
+.shop-main {
+  min-width: 0;
+}
+
+@media (max-width: 850px) {
+  .shop-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .side-cats {
+    display: flex;
+    overflow: auto;
+    gap: 4px;
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+  .side-cats h3 {
+    display: none;
+  }
+  .side-cats a {
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .side-cats a.active {
+    border-bottom-color: var(--red);
+  }
+}
+
 /* responsive */
 @media (max-width: 1000px) {
   .detail {
