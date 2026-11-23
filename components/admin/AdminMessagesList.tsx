@@ -23,6 +23,7 @@ export default function AdminMessagesList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ทั้งหมด");
   const [openId, setOpenId] = useState<number | null>(null);
+  const [composing, setComposing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<number, string>>({});
   const [saving, setSaving] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
@@ -65,6 +66,7 @@ export default function AdminMessagesList() {
       }
       setMsgType("ok");
       setMsg(`บันทึกคำตอบข้อความ #${c.contact_id} แล้ว (เห็นเฉพาะแอดมิน)`);
+      setComposing(null);
       await load();
     } catch {
       setMsgType("err");
@@ -150,7 +152,7 @@ export default function AdminMessagesList() {
                     {c.message}
                   </p>
 
-                  {c.reply_message && (
+                  {c.reply_message && composing !== c.contact_id && (
                     <div className="notice ok">
                       <b>ตอบแล้วโดย {c.replied_by ?? "-"}</b>
                       <p style={{ marginTop: 4, whiteSpace: "pre-wrap" }}>
@@ -159,39 +161,56 @@ export default function AdminMessagesList() {
                     </div>
                   )}
 
-                  <label>
-                    {c.reply_message ? "แก้ไขคำตอบ (ภายใน)" : "ตอบกลับ (ภายใน)"}
-                    <textarea
-                      rows={4}
-                      value={draft[c.contact_id] ?? c.reply_message ?? ""}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, [c.contact_id]: e.target.value }))
-                      }
-                      placeholder="พิมพ์ข้อความตอบกลับ / บันทึกการติดต่อกลับ..."
-                    />
-                  </label>
-                  <p className="hint">
-                    * ลูกค้าไม่เห็นข้อความนี้ในเว็บ — ใช้ปุ่ม “เปิดอีเมล”
-                    เพื่อส่งคำตอบถึงลูกค้าโดยตรง
-                  </p>
-
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {composing === c.contact_id ? (
+                    <>
+                      <label>
+                        ตอบกลับลูกค้า
+                        <textarea
+                          rows={4}
+                          autoFocus
+                          value={draft[c.contact_id] ?? c.reply_message ?? ""}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, [c.contact_id]: e.target.value }))
+                          }
+                          placeholder="พิมพ์ข้อความตอบกลับถึงลูกค้าที่นี่..."
+                        />
+                      </label>
+                      <p className="hint">
+                        * ข้อความตอบกลับจะถูกบันทึกไว้ในระบบ (ลูกค้าไม่เห็นในเว็บ)
+                      </p>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          onClick={() => reply(c)}
+                          disabled={saving === c.contact_id}
+                          className="btn small"
+                        >
+                          {saving === c.contact_id ? "กำลังบันทึก..." : "ส่งคำตอบ"}
+                        </button>
+                        <button
+                          type="button"
+                          className="outline small-btn"
+                          onClick={() => setComposing(null)}
+                        >
+                          ยกเลิก
+                        </button>
+                      </div>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => reply(c)}
-                      disabled={saving === c.contact_id}
+                      type="button"
                       className="btn small"
+                      style={{ marginTop: 10 }}
+                      onClick={() => {
+                        setDraft((d) => ({
+                          ...d,
+                          [c.contact_id]: d[c.contact_id] ?? c.reply_message ?? "",
+                        }));
+                        setComposing(c.contact_id);
+                      }}
                     >
-                      {saving === c.contact_id ? "กำลังบันทึก..." : "ส่งคำตอบ"}
+                      {c.reply_message ? "แก้ไขคำตอบ" : "ตอบกลับ"}
                     </button>
-                    <a
-                      className="outline small-btn"
-                      href={`mailto:${c.sender_email}?subject=${encodeURIComponent(
-                        "ตอบกลับ: " + c.subject
-                      )}`}
-                    >
-                      เปิดอีเมล
-                    </a>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
