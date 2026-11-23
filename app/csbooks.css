@@ -51,7 +51,7 @@ textarea {
 }
 
 .site-header {
-  min-height: 90px;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -93,25 +93,34 @@ textarea {
 }
 
 .logo img {
-  height: 60px;
+  height: 80px;
   width: auto;
   display: block;
 }
 
 .authhead .logo img {
-  height: 54px;
+  height: 68px;
 }
 
 .admin-top .logo img {
-  height: 42px;
+  height: 48px;
 }
 
 .footlogo img {
-  height: 68px;
+  height: 84px;
   width: auto;
   background: #fff;
   padding: 6px;
   border-radius: 8px;
+}
+
+.footlogo span {
+  color: #fff;
+  font-size: 22px;
+}
+
+.footlogo strong {
+  color: #fff;
 }
 
 .actions {
@@ -1426,6 +1435,12 @@ td img {
 }
 
 @media (max-width: 850px) {
+  .logo img {
+    height: 66px;
+  }
+  .logo {
+    font-size: 20px;
+  }
   .site-header {
     flex-wrap: wrap;
     padding: 15px 0;
@@ -1478,10 +1493,16 @@ td img {
 
 @media (max-width: 600px) {
   .logo img {
-    height: 48px;
+    height: 56px;
+  }
+  .logo {
+    font-size: 18px;
+  }
+  .logo small {
+    display: none;
   }
   .authhead .logo img {
-    height: 46px;
+    height: 52px;
   }
   .hero {
     grid-template-columns: 1fr;

@@ -10,6 +10,10 @@ export default function RegisterPage() {
         <Link className="logo" href="/" aria-label="CSbooks">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/logo.png" alt="CSbooks" />
+          <span>
+            CS<strong>books</strong>
+            <small>BOOKS FOR EVERY STORY</small>
+          </span>
         </Link>
         <Link href="/">← กลับหน้าร้าน</Link>
       </div>

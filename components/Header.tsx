@@ -24,6 +24,10 @@ export default async function Header() {
         <Link className="logo" href="/" aria-label="CSbooks หน้าแรก">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/logo.png" alt="CSbooks" />
+          <span>
+            CS<strong>books</strong>
+            <small>BOOKS FOR EVERY STORY</small>
+          </span>
         </Link>
 
         <form action="/books" className="search">

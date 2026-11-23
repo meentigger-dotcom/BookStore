@@ -8,6 +8,10 @@ export default function Footer() {
           <Link className="logo footlogo" href="/" aria-label="CSbooks">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/logo.png" alt="CSbooks" />
+            <span>
+              CS<strong>books</strong>
+              <small>BOOKS FOR EVERY STORY</small>
+            </span>
           </Link>
           <p>
             ร้านหนังสือออนไลน์สำหรับคนรักการอ่าน รวมหนังสือหลากหลายหมวดไว้ในที่เดียว
