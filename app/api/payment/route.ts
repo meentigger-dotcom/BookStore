@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     const filename = `slip-${orderId}-${Date.now()}-${Math.random()
       .toString(36)
       .slice(2, 8)}${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "slips");
+    const uploadDir = path.join(process.cwd(), "storage", "slips");
     await mkdir(uploadDir, { recursive: true });
     const buffer = Buffer.from(await slip.arrayBuffer());
     await writeFile(path.join(uploadDir, filename), buffer);

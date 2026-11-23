@@ -48,5 +48,10 @@ next-env.d.ts
 !/public/uploads/.gitkeep
 !/public/uploads/slips/.gitkeep
 
+# ไฟล์อัปโหลดใหม่ (เสิร์ฟผ่าน /uploads/slips/[file])
+/storage/**
+!/storage/.gitkeep
+!/storage/slips/.gitkeep
+
 # log ของตัวเรียกอัตโนมัติ
 /logs/
