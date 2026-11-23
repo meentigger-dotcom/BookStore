@@ -47,3 +47,6 @@ next-env.d.ts
 /public/uploads/**
 !/public/uploads/.gitkeep
 !/public/uploads/slips/.gitkeep
+
+# log ของตัวเรียกอัตโนมัติ
+/logs/
