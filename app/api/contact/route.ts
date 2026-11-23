@@ -5,7 +5,9 @@ import { getCusId } from "@/lib/auth";
 /**
  * POST /api/contact — ส่งข้อความจากหน้าติดต่อเรา (ไม่ต้อง login ก็ได้)
  * body: { name, email, subject, message }
- * ถ้า login อยู่ จะผูกข้อความกับบัญชี (cus_id) เพื่อดูคำตอบในหน้า "ข้อความของฉัน"
+ *
+ * ข้อความและคำตอบดูได้เฉพาะแอดมินที่ /admin/messages (ลูกค้าไม่เห็นในเว็บ)
+ * ถ้า login อยู่ จะผูกข้อความกับบัญชี (cus_id) ไว้เป็นข้อมูลอ้างอิง
  */
 export async function POST(request: Request) {
   try {
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
       {
         ok: true,
         contact_id: saved.contact_id,
-        message: "ส่งข้อความแล้ว ทีมงานจะตอบกลับภายใน 24 ชั่วโมง",
+        message: "ส่งข้อความแล้ว ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง",
       },
       { status: 201 }
     );
@@ -59,39 +61,6 @@ export async function POST(request: Request) {
     console.error("api/contact POST error:", e);
     return NextResponse.json(
       { error: "เกิดข้อผิดพลาดในระบบ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-/** GET /api/contact — ข้อความของฉัน + คำตอบ (ต้อง login) */
-export async function GET() {
-  try {
-    const cusId = await getCusId();
-    if (!cusId) {
-      return NextResponse.json({ error: "ยังไม่ได้เข้าสู่ระบบ" }, { status: 401 });
-    }
-
-    const items = await prisma.tb_contact.findMany({
-      where: { cus_id: cusId },
-      orderBy: { contact_id: "desc" },
-      select: {
-        contact_id: true,
-        subject: true,
-        message: true,
-        status: true,
-        reply_message: true,
-        replied_by: true,
-        replied_date: true,
-        created_date: true,
-      },
-    });
-
-    return NextResponse.json({ items });
-  } catch (e) {
-    console.error("api/contact GET error:", e);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในระบบ" },
       { status: 500 }
     );
   }

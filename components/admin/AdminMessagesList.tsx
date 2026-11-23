@@ -64,7 +64,7 @@ export default function AdminMessagesList() {
         return;
       }
       setMsgType("ok");
-      setMsg(`ตอบข้อความ #${c.contact_id} แล้ว — ลูกค้าเห็นที่หน้า “ข้อความของฉัน”`);
+      setMsg(`บันทึกคำตอบข้อความ #${c.contact_id} แล้ว (เห็นเฉพาะแอดมิน)`);
       await load();
     } catch {
       setMsgType("err");
@@ -160,16 +160,20 @@ export default function AdminMessagesList() {
                   )}
 
                   <label>
-                    {c.reply_message ? "แก้ไขคำตอบ" : "ตอบกลับ"}
+                    {c.reply_message ? "แก้ไขคำตอบ (ภายใน)" : "ตอบกลับ (ภายใน)"}
                     <textarea
                       rows={4}
                       value={draft[c.contact_id] ?? c.reply_message ?? ""}
                       onChange={(e) =>
                         setDraft((d) => ({ ...d, [c.contact_id]: e.target.value }))
                       }
-                      placeholder="พิมพ์ข้อความตอบกลับถึงลูกค้า..."
+                      placeholder="พิมพ์ข้อความตอบกลับ / บันทึกการติดต่อกลับ..."
                     />
                   </label>
+                  <p className="hint">
+                    * ลูกค้าไม่เห็นข้อความนี้ในเว็บ — ใช้ปุ่ม “เปิดอีเมล”
+                    เพื่อส่งคำตอบถึงลูกค้าโดยตรง
+                  </p>
 
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button

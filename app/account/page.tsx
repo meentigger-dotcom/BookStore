@@ -76,9 +76,6 @@ export default async function AccountPage() {
               <Link className="btn full" href="/orders">
                 ประวัติการสั่งซื้อ
               </Link>
-              <Link className="button-link" href="/messages" style={{ marginTop: 8 }}>
-                ข้อความติดต่อร้าน + คำตอบ
-              </Link>
               <Link className="button-link" href="/track" style={{ marginTop: 8 }}>
                 ติดตามพัสดุ
               </Link>

@@ -32,10 +32,8 @@ export default function ContactPage() {
           <div className="panel">
             <h2 style={{ fontSize: 18 }}>ส่งข้อความถึงเรา</h2>
             <p className="hint">
-              ทุกข้อความถูกบันทึกในฐานข้อมูล — ดูคำตอบได้ที่หน้า{" "}
-              <Link href="/messages" style={{ color: "var(--red)" }}>
-                ข้อความของฉัน
-              </Link>
+              ทุกข้อความถูกบันทึกในฐานข้อมูลและทีมงานเห็นในหลังบ้านทันที —
+              ทีมงานจะติดต่อกลับตามช่องทางที่ให้ไว้
             </p>
             <ContactForm />
           </div>

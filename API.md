@@ -120,25 +120,17 @@
 { "name": "สมชาย", "email": "somchai@test.com",
   "subject": "สอบถามการจัดส่ง", "message": "สั่งไป 3 วันยังไม่ได้รับ" }
 ```
-- `201` `{ ok: true, contact_id: 1 }` → เอา `contact_id` ไปให้ลูกค้าเก็บไว้เช็คคำตอบ
-- ถ้า login อยู่ ข้อความจะผูกกับบัญชี (เห็นได้ใน `/messages`)
-
-### POST `/api/contact/lookup` — เช็คคำตอบ (ไม่ต้อง login)
-```json
-{ "contact_id": 1, "email": "somchai@test.com" }
-```
-- `200` → `{ item: { subject, message, status, reply_message, replied_by } }`
-- `404` ถ้ารหัสไม่ตรงหรืออีเมลไม่ใช่ผู้ส่ง
-
-### GET `/api/contact` — ข้อความของฉัน + คำตอบ (ต้อง login)
+- `201` `{ ok: true, contact_id: 1 }` (เลขที่อ้างอิง)
+- ถ้า login อยู่ ข้อความจะผูกกับบัญชีไว้เป็นข้อมูลอ้างอิง
+- **ลูกค้าดูคำตอบในเว็บไม่ได้** — ดูได้เฉพาะแอดมินที่ `/admin/messages`
 
 ### GET `/api/admin/contacts` — ข้อความทั้งหมด (แอดมิน)
-### PATCH `/api/admin/contacts/[id]` — ตอบกลับ (แอดมิน)
+### PATCH `/api/admin/contacts/[id]` — บันทึกคำตอบ (แอดมิน)
 ```json
 { "reply_message": "จัดส่งแล้ว จะถึงภายใน 2 วันทำการครับ", "status": "ตอบแล้ว" }
 ```
 - `status`: `"ตอบแล้ว"` หรือ `"กำลังตอบ"` · ระบบบันทึก `replied_by` + `replied_date` ให้
-- ลูกค้าเห็นคำตอบที่หน้า `/messages` หรือด้วยรหัสข้อความ + อีเมล
+- คำตอบถูกเก็บไว้ให้แอดมินดูเท่านั้น (ลูกค้าไม่เห็น) — ติดต่อกลับลูกค้าทางอีเมล/โทร
 
 ---
 

@@ -47,16 +47,15 @@ export default function ContactForm() {
         <p style={{ fontSize: 22 }}>✅</p>
         <b>ส่งข้อความเรียบร้อยแล้ว</b>
         <p style={{ marginTop: 4 }}>
-          รหัสข้อความของคุณคือ <b style={{ fontSize: 16 }}>#{ticket}</b> —
-          เก็บไว้ใช้เช็คคำตอบ (ทีมงานตอบภายใน 24 ชั่วโมง)
+          เลขที่อ้างอิง: <b>#{ticket}</b> — ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง
         </p>
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          <Link href={`/messages?ticket=${ticket}`} className="btn small">
-            ดูข้อความของฉัน
-          </Link>
           <button className="outline small-btn" onClick={() => setTicket(null)}>
             ส่งข้อความใหม่
           </button>
+          <Link href="/books" className="btn small">
+            กลับไปเลือกซื้อหนังสือ
+          </Link>
         </div>
       </div>
     );
