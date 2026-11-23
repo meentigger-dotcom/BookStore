@@ -58,6 +58,23 @@ npm run dev
 
 เปิด http://localhost:3000
 
+## 🔐 เปลี่ยนรหัสผ่าน / ลืมรหัสผ่าน
+
+> ⚠️ รหัสผ่านใน `tb_customer.passw` **ต้องเป็น bcrypt hash** เท่านั้น
+> ห้ามพิมพ์ข้อความธรรมดาลงใน phpMyAdmin — ระบบจะ login ไม่ได้
+
+ใช้คำสั่งนี้ (ปลอดภัยและได้ hash ให้อัตโนมัติ):
+
+```bash
+node scripts/set-password.js admin@csbook.com รหัสใหม่
+```
+
+ตรวจสอบบัญชีทั้งหมดว่าเก็บรหัสถูกต้องหรือไม่:
+
+```bash
+node scripts/check-users.js
+```
+
 ## 👤 บัญชีทดสอบ
 
 | บทบาท | อีเมล | รหัสผ่าน |
